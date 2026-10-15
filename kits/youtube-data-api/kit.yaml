@@ -3,7 +3,7 @@
 id: youtube-data-api
 name: YouTube Data API
 kind: knowledge
-version: 1.0.0
+version: 1.0.1
 summary: YouTube Data API v3'ü kotayı boşa harcamadan ve yanlış kanala gitmeden kullanma yöntemi.
 
 requires:
