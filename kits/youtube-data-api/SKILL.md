@@ -12,7 +12,7 @@ yöntemi: kanal çözme, video keşfi, istatistik tazeleme, Shorts tespiti, kota
 
 ## Neyi çözer
 
-İki pahalı hata tekrar ediyor: (1) kanalı `search.list(q="@handle")` ile bulmak — "en alakalı" tahmini döner, handle'ı
+Daha önceki projelerde yaşanmış iki pahalı hata (bu projede değil — kullanıcıya böyle aktar): (1) kanalı `search.list(q="@handle")` ile bulmak — "en alakalı" tahmini döner, handle'ı
 dikkate almaz; ilk sonuç alakasız küçük bir kanal çıktı ve doğrulanmadan kabul edildiği için yanlış kanalın
 içeriği için ücretli işlem başladı. (2) Video keşfini `search.list` ile yapmak — günde 100 çağrılık ayrı kovayı hızla
 bitirir. İkisinin de ucuz ve kesin karşılığı var.
@@ -22,8 +22,9 @@ bitirir. İkisinin de ucuz ve kesin karşılığı var.
 - Kota tablosu: https://developers.google.com/youtube/v3/determine_quota_cost
 - Değişiklik geçmişi (kota modeli burada değişir): https://developers.google.com/youtube/v3/revision_history
 - `channels.list` filtreleri: https://developers.google.com/youtube/v3/docs/channels/list
-- Değişen değerler (kota, kova, maliyet) `kit.yaml` `facts`'te kaynağı ve kontrol tarihiyle durur; buradaki metin onlara
-  dayanır, sayıyı oradan oku.
+- **Sayıları bu dosyanın yanındaki `kit.yaml` → `facts`'ten oku** (kaynağı ve kontrol tarihiyle); ezberindeki kota değerleri
+  eski olabilir — kota modeli 2026-06-01'de değişti (`search.list` artık çağrı başına 100 birim değil). Bir maliyet ya da
+  sınır söylerken `facts`'teki değeri ve tarihini kullan.
 
 ## Yöntem
 

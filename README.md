@@ -9,7 +9,7 @@ bir projeye diff → onay → PR olarak uygular. Tekan kullanmayan biri de kit'i
 | Kit | Tür | Sürüm | Ne yapar |
 |---|---|---|---|
 | [docs-os](kits/docs-os/) | setup | 1.1.0 | AGENTS.md router, docs/ slotları, doc-guard CI |
-| [youtube-data-api](kits/youtube-data-api/) | knowledge | 1.0.0 | YouTube Data API v3: kanal çözme, keşif, kota kovaları |
+| [youtube-data-api](kits/youtube-data-api/) | knowledge | 1.0.1 | YouTube Data API v3: kanal çözme, keşif, kota kovaları |
 
 ## Bir kit'in yapısı
 
