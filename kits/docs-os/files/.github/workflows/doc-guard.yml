@@ -3,7 +3,7 @@ name: doc-guard
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, dev]
 
 jobs:
   doc-guard:
