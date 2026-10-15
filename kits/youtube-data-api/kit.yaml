@@ -1,0 +1,51 @@
+# youtube-data-api — kit manifesti (ADR 0024 / tekan).
+# knowledge kit: projeye dosya yazmaz; SKILL.md agent oturumuna yüklenir. Değişen değerler aşağıda `facts`'te.
+id: youtube-data-api
+name: YouTube Data API
+kind: knowledge
+version: 1.0.0
+summary: YouTube Data API v3'ü kotayı boşa harcamadan ve yanlış kanala gitmeden kullanma yöntemi.
+
+requires:
+  cli: []
+  secrets: [YOUTUBE_API_KEY]
+
+files: []
+
+sources:
+  - { title: "Quota calculator", url: "https://developers.google.com/youtube/v3/determine_quota_cost", kind: official_docs }
+  - { title: "Revision history", url: "https://developers.google.com/youtube/v3/revision_history", kind: changelog }
+  - { title: "Channels: list", url: "https://developers.google.com/youtube/v3/docs/channels/list", kind: official_docs }
+  - { title: "Videos: batchGetStats", url: "https://developers.google.com/youtube/v3/docs/videos/batchGetStats", kind: official_docs }
+
+facts:
+  - key: default_daily_quota
+    label: Default daily quota (all methods except search.list and videos.insert)
+    value: "10000 units/day"
+    sourceUrl: https://developers.google.com/youtube/v3/determine_quota_cost
+    checkedAt: "2026-10-15"
+  - key: search_list_bucket
+    label: search.list quota
+    value: "Own bucket, 100 calls/day, 1 unit per call (granular buckets since 2026-06-01)"
+    sourceUrl: https://developers.google.com/youtube/v3/revision_history
+    checkedAt: "2026-10-15"
+  - key: videos_insert_bucket
+    label: videos.insert quota
+    value: "Own bucket, 100 calls/day"
+    sourceUrl: https://developers.google.com/youtube/v3/revision_history
+    checkedAt: "2026-10-15"
+  - key: basic_read_cost
+    label: channels.list, playlistItems.list, videos.list, commentThreads.list cost
+    value: "1 unit"
+    sourceUrl: https://developers.google.com/youtube/v3/determine_quota_cost
+    checkedAt: "2026-10-15"
+  - key: batch_get_stats_cost
+    label: videos.batchGetStats cost
+    value: "1 unit per call (added 2026-06-03)"
+    sourceUrl: https://developers.google.com/youtube/v3/docs/videos/batchGetStats
+    checkedAt: "2026-10-15"
+  - key: captions_list_cost
+    label: captions.list cost
+    value: "50 units"
+    sourceUrl: https://developers.google.com/youtube/v3/determine_quota_cost
+    checkedAt: "2026-09-07"
