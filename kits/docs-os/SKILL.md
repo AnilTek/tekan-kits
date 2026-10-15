@@ -36,6 +36,9 @@ agent yazmaz, kopyalar.
 3. **Yer tutucuları repoyu OKUYARAK doldur, tahmin etme.** Stack ve komutlar `package.json` / `pyproject.toml` /
    `Makefile`'dan; architecture.md'deki alanlar üst düzey kaynak dizinlerinden. Repo cevap vermiyorsa
    `<PLACEHOLDER>` kalır. Repodan okunamayanı kullanıcıya sor (task tracker, altyapı nasıl yönetiliyor).
+   Var olan projede doc-guard "last_reviewed yok" derse o canonical dosyaya frontmatter ekle; tarih dosyanın git'teki
+   son commit günüdür (`git log -1 --format=%cs -- <dosya>`), bugün değil — dosya bugün incelenmedi. Sonra doc-guard'ı
+   yeniden çalıştır ve kalan hataları listele.
 4. **Sürümü kaydet.** `.tekan/kits.json`'a `{ "source", "kit": "docs-os", "version", "files": { path: sha256 } }`
    (yalnız managed dosyalar). Tekan bunu kendisi yazar; Tekan dışındaysan elle yaz.
 5. **Tek PR.** Branch `chore/docs-os`, `bash assets/scripts/doc-guard.sh` yerelde yeşil, sonra PR.
