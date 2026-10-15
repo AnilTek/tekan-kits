@@ -1,5 +1,14 @@
 # docs-os — değişiklik günlüğü
 
+## 1.1.0 — 2026-10-15
+
+İlk gerçek benimsetmede (bir proje, `dev` akışlı) görülenler:
+
+- `doc-guard.yml` (managed): `push` artık `main` ve `dev`'de koşar. Önceki sürüm yalnız `main`'deydi; `dev` akışlı
+  projede birleştirmeden sonra kontrol koşmuyordu.
+- `SKILL.md` Yöntem 3: managed dosya projenin kendi sürümünü değiştirdiyse projeye özgü kontroller (ör. kişisel veri
+  deseni) `doc-guard.local.sh`'e taşınır. Önceki sürümde bu adım agent'a iletilmiyordu ve bir projenin kontrolü kayboldu.
+
 ## 1.0.1 — 2026-10-15
 
 - `SKILL.md` Yöntem 3: var olan projede eksik `last_reviewed`, dosyanın git'teki son commit günüyle doldurulur (bugünün tarihi
