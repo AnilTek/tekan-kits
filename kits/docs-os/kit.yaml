@@ -1,0 +1,47 @@
+# docs-os — kit manifesti (ADR 0024 / tekan).
+# managed: kit'in malı, sürümle güncellenir; projede düzenlenmez, değişken içermez (her projede aynı bayt).
+# seed: bir kez kopyalanır, sonra projenin malı; güncelleme dokunmaz. {{PROJECT_NAME}} ve {{TODAY}} uygulamada doldurulur.
+id: docs-os
+name: Docs OS
+kind: setup
+version: 1.0.0
+summary: AGENTS.md router, docs/ slotları ve doc-guard CI — her projede aynı doküman sistemi.
+
+requires:
+  cli: [git]
+  secrets: []
+
+files:
+  - { path: assets/scripts/doc-guard.sh, mode: managed }
+  - { path: .github/workflows/doc-guard.yml, mode: managed }
+  - { path: docs/README.md, mode: managed }
+  - { path: docs/decisions/_template.md, mode: managed }
+  - { path: docs/intent/_template.md, mode: managed }
+  - { path: docs/canonical/integrations/_template.md, mode: managed }
+  - { path: AGENTS.md, mode: seed }
+  - { path: CLAUDE.md, mode: seed }
+  - { path: docs/canonical/context.md, mode: seed }
+  - { path: docs/canonical/glossary.md, mode: seed }
+  - { path: docs/canonical/architecture.md, mode: seed }
+  - { path: docs/canonical/security.md, mode: seed }
+  - { path: docs/decisions/0000-record-architecture-decisions.md, mode: seed }
+  - { path: docs/inbox/.gitkeep, mode: seed }
+  - { path: docs/_scratch/.gitkeep, mode: seed }
+  - { path: skills/README.md, mode: seed }
+
+# Dosyada bu satırlar yoksa sona eklenir; var olan satırlara dokunulmaz.
+ensure_lines:
+  .gitignore:
+    - "docs/_scratch/*"
+    - "!docs/_scratch/.gitkeep"
+    - "docs/inbox/*"
+    - "!docs/inbox/.gitkeep"
+
+# Kopyadan sonra agent turu: SKILL.md "Yöntem" bölümü, adım 3.
+agent_step: fill_placeholders
+
+sources:
+  - { title: "Michael Nygard — Documenting Architecture Decisions", url: "https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions", kind: official_docs }
+  - { title: "Agent Skills specification", url: "https://agentskills.io/", kind: official_docs }
+
+facts: []

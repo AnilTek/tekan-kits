@@ -1,0 +1,14 @@
+name: doc-guard
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  doc-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dokümantasyon taksonomisini doğrula
+        run: bash assets/scripts/doc-guard.sh
