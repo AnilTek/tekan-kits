@@ -8,7 +8,7 @@ bir projeye diff → onay → PR olarak uygular. Tekan kullanmayan biri de kit'i
 
 | Kit | Tür | Sürüm | Ne yapar |
 |---|---|---|---|
-| [docs-os](kits/docs-os/) | setup | 1.0.0 | AGENTS.md router, docs/ slotları, doc-guard CI |
+| [docs-os](kits/docs-os/) | setup | 1.0.1 | AGENTS.md router, docs/ slotları, doc-guard CI |
 
 ## Bir kit'in yapısı
 
