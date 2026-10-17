@@ -1,6 +1,6 @@
 ---
 name: local-env
-description: Set up or adopt the local environment contract in a repository - Docker Postgres on the same major as prod, schema built from migrations, a small hand-written seed, one-command reset (env-up, env-down, db-reset, dev), external services as mock-or-real via <SERVICE>_BASE_URL, and a CI guard (env-check.sh). Use when the user says "yerel ortam", "local env", "docker compose", "db-reset", "env-up", "mock", "seed", when a port clashes ("address already in use", "port is already allocated", "bind: address already in use", wrong DB answering on 5432), when .env.example has a *_BASE_URL with no mock, or when a repo has no compose file or no env-up/db-reset commands. Never invent ports or Postgres versions from memory.
+description: Set up or adopt the local environment contract in a repository - Docker Postgres on the same major as prod, schema built from migrations, a small hand-written seed, one-command reset (env-up, env-down, db-reset, dev, check), external services as mock-or-real via <SERVICE>_BASE_URL, and a structural guard (env-check.sh, run locally via `make check`; CI optional). Ships a Postgres template; for other stacks (SQLite/D1, Supabase, BigQuery, object storage) keep the contract and adapt the files. Use when the user says "yerel ortam", "local env", "docker compose", "db-reset", "env-up", "mock", "seed", when a port clashes ("address already in use", "port is already allocated", "bind: address already in use", wrong DB answering on 5432), when .env.example has a *_BASE_URL with no mock, or when a repo has no compose file or no env-up/db-reset commands. Never invent ports or Postgres versions from memory.
 ---
 
 # local-env
@@ -9,7 +9,8 @@ description: Set up or adopt the local environment contract in a repository - Do
 
 Her projede aynı yerel ortam: Docker'da prod'la aynı major Postgres, şemayı migration'lardan kuran, elle yazılmış küçük seed,
 tek komutla sıfırlama (sil, migrate, seed). Her dış servis `<SERVICE>_BASE_URL` ile mock ya da gerçek seçilir; mock
-compose'ta ayrı servistir. Komut adları sabit: `env-up`, `env-down`, `db-reset`, `dev`. Her PR'da `env-check` ve `db-reset` CI'ı koşar.
+compose'ta ayrı servistir. Komut adları sabit: `env-up`, `env-down`, `db-reset`, `dev`, `check`. Kapı yerel `make check`'tir; CI
+isteğe bağlıdır. Dosyalar Postgres şablonudur; başka veritabanında sözleşme aynı kalır, dosyalar stack'e uyarlanır.
 
 ## Neyi çözer
 
@@ -36,7 +37,14 @@ compose'ta ayrı servistir. Komut adları sabit: `env-up`, `env-down`, `db-reset
 
 ## Yöntem
 
-1. **Önce bak.** Compose dosyası (`compose.yaml`, `compose.yml`, `docker-compose.yaml`, `docker-compose.yml`), `Makefile` ya da
+1. **Önce stack'e bak, sonra kopyala.** Veritabanı ve depolama nedir (altyapı kodu, ADR, `wrangler.toml`, `package.json`)?
+   - **Postgres değilse** kit'in Postgres parçalarını (`compose.yaml`'daki `postgres` servisi, `db-seed`'deki `psql`) olduğu gibi
+     bırakma: sözleşmeyi (dört komut + `check`, `*_BASE_URL` mock'ları, tek komutla sıfırlama, elle seed) stack'in yerel
+     eşdeğeriyle doldur. Örnek: D1/SQLite → `wrangler d1 migrations apply --local` ve `wrangler d1 execute --local --file`;
+     R2/S3 → compose'ta S3 uyumlu bir mock (MinIO gibi); Supabase → Supabase CLI'ın yerel stack'i. Docker gerekmiyorsa compose
+     dosyası olmayabilir; o zaman mock satırları `# env-check: process`.
+   - **Proje CI kullanmıyorsa** (bir ADR'de "CI yok" kararı) workflow ekleme; kapı `make check`.
+   Sonra: compose dosyası (`compose.yaml`, `compose.yml`, `docker-compose.yaml`, `docker-compose.yml`), `Makefile` ya da
    `package.json` script'leri, `.env.example`, migration klasörü, CI. Var olanın üzerine yazma.
    - Repoda zaten bir compose dosyası varsa kit'in `compose.yaml`'ını ekleme: Compose ikisi varken `compose.yaml`'ı seçer, eskisi
      sessizce devre dışı kalır. Kit'in servislerini var olan dosyaya, onun adıyla birleştir.
@@ -46,7 +54,7 @@ compose'ta ayrı servistir. Komut adları sabit: `env-up`, `env-down`, `db-reset
    `ensure_lines` ile `.gitignore`'a satırları ekle. `{{PROJECT_NAME}}` → compose proje adı (küçük harf, rakam, tire, alt çizgi).
 3. **Yer tutucuları repoyu OKUYARAK doldur** (`<PLACEHOLDER: ...>`; `env-check.sh` doldurulmamışı kırmızıya düşürür):
    Postgres major'ı prod'dan, veri yolu `facts`'ten, `db-migrate` / `db-seed` / `dev` komutları `package.json` / `pyproject.toml` /
-   `Makefile`'dan, `db-reset.yml`'a stack'in toolchain adımları. Kullanıcı ve veritabanı adı projeye özgü kısa ad olsun, `postgres`/`postgres`
+   `Makefile`'dan. Kullanıcı ve veritabanı adı projeye özgü kısa ad olsun, `postgres`/`postgres`
    değil: yanlış porta bağlanırsan sessizce başka veritabanı değil, kimlik hatası al.
 4. **Portu makineden sorgulayarak seç.** Aday seç; üç sorguda da yoksa kullan. Duran konteynerler ve öteki projelerin dosyaları da sayılır,
    çünkü duran proje portunu geri ister:
@@ -65,12 +73,13 @@ compose'ta ayrı servistir. Komut adları sabit: `env-up`, `env-down`, `db-reset
 6. **Seed küçük ve elle yazılır** (`db/seed.sql`): gerçek kişi ya da prod verisi yok. Yeni tablo örnek veri istiyorsa seed aynı PR'da güncellenir.
    Gerçeğe yakın veri gerekirse maskelenmiş snapshot: yalnız kullanıcı onayıyla, salt okunur kimlikle, maskeleme dump sırasında; ham dump makineye inmez
    (bu kit snapshot sağlamaz).
-7. **Kendin doğrula, geçici ortamda değil bu ortamda:** `bash assets/scripts/env-check.sh`; boş makineden `make db-reset`; ikinci `make db-reset`;
+7. **Kendin doğrula, geçici ortamda değil bu ortamda:** `make check`; boş makineden `make db-reset`; ikinci `make db-reset`;
    `make env-down && make env-up` sonrası verinin durduğunu kontrol et. Aynı komutları kullanıcıya yaz, kendi terminalinde tekrarlasın.
 8. **Ortamlar bölümü.** `docs/canonical/architecture.md`'ye `## Ortamlar` ekle (yoksa; docs-os'ta yer tutucusu hazır): dış bağlantı tablosu
    (servis, yerel varsayılanı mock ya da gerçek, mock'un adı, staging'de durumu) ve staging var mı, adresi. `last_reviewed` tarihini güncelle.
 9. **Sürümü kaydet ve PR.** `.tekan/kits.json`'a `{ "source", "kit": "local-env", "version", "files": { path: sha256 } }` (yalnız managed
-   dosyalar; Tekan kendisi yazar). Branch `chore/local-env`, PR `--base dev`, `env-check` ve `db-reset` CI'ı yeşil.
+   dosyalar; Tekan kendisi yazar). `make check` yeşil. Proje CI kullanıyorsa ve istiyorsa `optional/.github/workflows/`
+   (`env-check.yml`, `db-reset.yml`; toolchain adımı doldurulur) eklenir; CI'sız projede eklenmez.
 
 ## Araçlar
 
@@ -78,7 +87,8 @@ compose'ta ayrı servistir. Komut adları sabit: `env-up`, `env-down`, `db-reset
 
 ## Sınırlar
 
-- Yalnız Postgres ve HTTP/SMTP mock'ları. Redis gibi ek servis aynı kalıpla (boş port, `127.0.0.1`, adlandırılmış birim) eklenir; kit dosyası yok.
+- Kit dosyaları yalnız Postgres ve HTTP/SMTP mock'ları için hazır. Başka veritabanı ya da Redis gibi ek servis aynı kalıpla
+  (boş port, `127.0.0.1`, adlandırılmış birim, `*_BASE_URL`) uyarlanır; onlar için kit dosyası yok.
 - `env-check.sh` yapıyı denetler (komut adları, sabit major, yayımlanan port, doldurulmuş yer tutucu), mock'un doğru davranıp davranmadığını değil.
   Compose'u YAML olarak ayrıştırmaz: `ports:` liste satırlarını ve `published:` alanını okur; `include`/`extends` ile gelen portları görmez.
 - Aynı repo'nun paralel worktree'leri aynı sabit portu ve proje adını paylaşır: ortam tek kopyadır, bir worktree'deki `db-reset` ötekinin verisini siler.

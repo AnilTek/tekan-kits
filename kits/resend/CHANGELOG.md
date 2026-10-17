@@ -1,5 +1,9 @@
 # resend — değişiklik günlüğü
 
+## 1.0.1 — 2026-10-18
+
+- Görünen ad İngilizce: "Resend transactional email" (arayüz dili İngilizce; Türkçe ad uygulama branch'inin adını da bozuyordu).
+
 ## 1.0.0 — 2026-10-17
 
 İlk sürüm. Yöntem, 3 projenin kaynaklarından damıtıldı: biri tam bir işlem e-postası kararı ve entegrasyon dokümanı

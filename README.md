@@ -9,16 +9,16 @@ bir projeye diff → onay → PR olarak uygular. Tekan kullanmayan biri de kit'i
 | Kit | Tür | Sürüm | Ne yapar |
 |---|---|---|---|
 | [docs-os](kits/docs-os/) | setup | 1.1.0 | AGENTS.md router, docs/ slotları, doc-guard CI |
-| [local-env](kits/local-env/) | setup | 1.0.0 | Docker Postgres, `env-up`/`env-down`/`db-reset`/`dev`, `*_BASE_URL` mock'ları, env-check CI |
+| [local-env](kits/local-env/) | setup | 2.0.0 | `env-up`/`env-down`/`db-reset`/`dev`/`check`, `*_BASE_URL` mock'ları; Postgres şablonu, başka stack'e uyarlanır |
 | [railway](kits/railway/) | setup | 1.0.0 | Railway IaC (`.railway/railway.ts`), healthcheck, pre-deploy migration, ortam-dal eşlemesi |
 | [apify](kits/apify/) | knowledge | 1.0.0 | Actor çalıştırma: bütçe kapısı, gerçek maliyet, sessiz eksik veri, actor seçimi |
 | [elevenlabs](kits/elevenlabs/) | knowledge | 1.0.0 | Scribe STT ve TTS: iki kez ödememe, önbellek, onaylı ücretli çalıştırma |
 | [gemini](kits/gemini/) | knowledge | 1.0.0 | google-genai ile Gemini API / Vertex: kimlik, bölge, düşünme token'ı maliyeti, 429 |
 | [google-oauth-login](kits/google-oauth-login/) | knowledge | 1.0.0 | Domain'e kısıtlı Google girişi: `hd` + `email_verified`, redirect, çerez, bootstrap admin |
 | [google-trends](kits/google-trends/) | knowledge | 1.0.0 | 0–100 indeksini doğru okuma, karşılaştırılabilir çekim, kaynak seçimi |
-| [openrouter](kits/openrouter/) | knowledge | 1.0.0 | LLM çağrısında gerçek maliyet, harcama tavanları, retry, yedek model, JSON güvenilirliği |
-| [resend](kits/resend/) | knowledge | 1.0.0 | İşlem e-postası: domain doğrulama, idempotency, yerelde Mailpit |
-| [supabase](kits/supabase/) | knowledge | 1.0.0 | Backend'den Supabase: anahtar rolleri, JWT doğrulama, RLS, pooler, migration kayması |
+| [openrouter](kits/openrouter/) | knowledge | 1.0.1 | LLM çağrısında gerçek maliyet, harcama tavanları, retry, yedek model, JSON güvenilirliği |
+| [resend](kits/resend/) | knowledge | 1.0.1 | İşlem e-postası: domain doğrulama, idempotency, yerelde Mailpit |
+| [supabase](kits/supabase/) | knowledge | 1.0.1 | Backend'den Supabase: anahtar rolleri, JWT doğrulama, RLS, pooler, migration kayması |
 | [youtube-data-api](kits/youtube-data-api/) | knowledge | 1.0.1 | YouTube Data API v3: kanal çözme, keşif, kota kovaları |
 
 ## Bir kit'in yapısı

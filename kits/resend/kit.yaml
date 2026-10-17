@@ -1,9 +1,9 @@
 # resend — kit manifesti (ADR 0024 / tekan).
 # knowledge kit: projeye dosya yazmaz; SKILL.md agent oturumuna yüklenir. Değişen değerler aşağıda `facts`'te.
 id: resend
-name: Resend (işlem e-postası)
+name: Resend transactional email
 kind: knowledge
-version: 1.0.0
+version: 1.0.1
 summary: Resend ile işlem e-postasını (giriş kodu, doğrulama, davet) gerçekten ulaştırma; yerelden asla gerçek posta göndermeme yöntemi.
 
 requires:

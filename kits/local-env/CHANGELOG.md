@@ -1,5 +1,16 @@
 # local-env — değişiklik günlüğü
 
+## 2.0.0 — 2026-10-18
+
+İlk gerçek uygulamada (Postgres'siz, CI'sız bir proje: D1 + R2, ADR'si "CI yok, kontroller yerelde") görülenler:
+
+- CI workflow'ları artık kopyalanmaz (`files`'tan çıktı, `optional/.github/workflows/`'a taşındı). Kapı yerel `make check`;
+  CI yalnız proje kullanıyorsa eklenir. Önceki sürüm CI'sız projeye iki workflow koymuştu.
+- `Makefile`'a `check` hedefi.
+- `env-check.sh`: compose dosyası yoksa hata değil not (Docker'sız stack'te servisler compose dışında olabilir).
+- SKILL.md Yöntem 1: önce stack'e bakılır; Postgres değilse dosyalar olduğu gibi bırakılmaz, sözleşme stack'in yerel
+  eşdeğeriyle (D1/SQLite, S3 mock, Supabase CLI) doldurulur.
+
 ## 1.0.0 — 2026-10-17
 
 İlk sürüm. Yerel ortam sözleşmesinin (Docker Postgres, migration'dan şema, seed, tek komutla sıfırlama, `<SERVICE>_BASE_URL` ile

@@ -1,5 +1,9 @@
 # openrouter — değişiklik günlüğü
 
+## 1.0.1 — 2026-10-18
+
+- Görünen ad İngilizce: "OpenRouter LLM calls" (arayüz dili İngilizce; Türkçe ad uygulama branch'inin adını da bozuyordu).
+
 ## 1.0.0 — 2026-10-17
 
 İlk sürüm. Yöntem ve uyarılar şu kaynaklardan damıtıldı: 4 projenin kod ve ayar dosyaları (tur/gün/ay harcama tavanları,

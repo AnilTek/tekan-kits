@@ -1,5 +1,9 @@
 # supabase — değişiklik günlüğü
 
+## 1.0.1 — 2026-10-18
+
+- Görünen ad İngilizce: "Supabase backend" (arayüz dili İngilizce; Türkçe ad uygulama branch'inin adını da bozuyordu).
+
 ## 1.0.0 — 2026-10-17
 
 İlk sürüm. Gerçek projelerde yaşanmış hatalardan damıtıldı: 4 projenin ADR, güvenlik denetimi, migration README'si, entegrasyon
