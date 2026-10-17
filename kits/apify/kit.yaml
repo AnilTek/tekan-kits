@@ -1,0 +1,105 @@
+# apify — kit manifesti (ADR 0024 / tekan).
+# knowledge kit: projeye dosya yazmaz; SKILL.md agent oturumuna yüklenir. Değişen değerler aşağıda `facts`'te.
+id: apify
+name: Apify actors
+kind: knowledge
+version: 1.0.0
+summary: Apify actor'lerini krediyi yakmadan ve sessiz eksik veri almadan koddan çalıştırma yöntemi.
+
+requires:
+  cli: []
+  secrets: [APIFY_TOKEN]
+
+files: []
+
+sources:
+  - { title: "Pricing", url: "https://apify.com/pricing", kind: pricing }
+  - { title: "API v2 — rate limiting", url: "https://docs.apify.com/api/v2", kind: official_docs }
+  - { title: "Run Actor synchronously and get dataset items", url: "https://docs.apify.com/api/v2/act-run-sync-get-dataset-items-post", kind: official_docs }
+  - { title: "Run Actor (async)", url: "https://docs.apify.com/api/v2/act-runs-post", kind: official_docs }
+  - { title: "Get run", url: "https://docs.apify.com/api/v2/actor-run-get", kind: official_docs }
+  - { title: "Get dataset items", url: "https://docs.apify.com/api/v2/dataset-items-get", kind: official_docs }
+  - { title: "Runs and builds (lifecycle)", url: "https://docs.apify.com/platform/actors/running/runs-and-builds", kind: official_docs }
+  - { title: "Usage and resources", url: "https://docs.apify.com/platform/actors/running/usage-and-resources", kind: official_docs }
+  - { title: "Actors in Store (pricing models)", url: "https://docs.apify.com/platform/actors/running/actors-in-store", kind: official_docs }
+  - { title: "Webhook events", url: "https://docs.apify.com/platform/integrations/webhooks/events", kind: official_docs }
+  - { title: "Webhook actions (delivery)", url: "https://docs.apify.com/platform/integrations/webhooks/actions", kind: official_docs }
+  - { title: "Storage usage and retention", url: "https://docs.apify.com/platform/storage/usage", kind: official_docs }
+  - { title: "Platform limits", url: "https://docs.apify.com/platform/limits", kind: official_docs }
+
+facts:
+  - key: sync_run_timeout
+    label: Synchronous run endpoints (run-sync, run-sync-get-dataset-items) time limit
+    value: "300 seconds; beyond it the HTTP response is 408. Docs do not say whether the run keeps going; if the connection breaks you get no information about the run and its status"
+    sourceUrl: https://docs.apify.com/api/v2/act-run-sync-get-dataset-items-post
+    checkedAt: "2026-10-17"
+  - key: wait_for_finish_max
+    label: waitForFinish on async Run Actor
+    value: "Default 0 s, maximum 60 s; longer waits need repeated polling of the run"
+    sourceUrl: https://docs.apify.com/api/v2/act-runs-post
+    checkedAt: "2026-10-17"
+  - key: max_total_charge_usd
+    label: maxTotalChargeUsd (run cost cap)
+    value: "Caps total run cost across all pricing models; for pay-per-event Actors the run ends gracefully at the limit and events over it are not charged. Docs page for Run Actor does not say what happens at the limit for other models"
+    sourceUrl: https://docs.apify.com/platform/actors/running/actors-in-store
+    checkedAt: "2026-10-17"
+  - key: max_items_semantics
+    label: maxItems on Run Actor
+    value: "Caps the number of dataset items CHARGED for pay-per-result Actors only; does not guarantee the Actor returns only that many items"
+    sourceUrl: https://docs.apify.com/api/v2/act-runs-post
+    checkedAt: "2026-10-17"
+  - key: free_plan_credit
+    label: Free plan included platform usage
+    value: "$5 per month (Starter $19, Scale $199, Business $999 monthly price = included usage)"
+    sourceUrl: https://apify.com/pricing
+    checkedAt: "2026-10-17"
+  - key: compute_unit_price
+    label: Price per compute unit (CU)
+    value: "$0.20 (Free, Starter), $0.16 (Scale), $0.13 (Business); 1 CU = 1024 MB x 1 hour"
+    sourceUrl: https://apify.com/pricing
+    checkedAt: "2026-10-17"
+  - key: pricing_models
+    label: Store Actor pricing models
+    value: "Pay per event (platform usage usually included, some Actors bill it separately), pay per usage, rental (monthly fee plus platform usage); event prices are on each Actor's page"
+    sourceUrl: https://docs.apify.com/platform/actors/running/actors-in-store
+    checkedAt: "2026-10-17"
+  - key: run_cost_preliminary
+    label: Run object cost right after completion
+    value: "usageTotalUsd, stats and chargedEventCounts can be preliminary right after the run ends; docs suggest waiting about 10 s and reading the run again"
+    sourceUrl: https://docs.apify.com/api/v2/actor-run-get
+    checkedAt: "2026-10-17"
+  - key: run_statuses
+    label: Run lifecycle statuses
+    value: "Transitional: READY, RUNNING, TIMING-OUT, ABORTING. Terminal: SUCCEEDED, FAILED, TIMED-OUT, ABORTED"
+    sourceUrl: https://docs.apify.com/platform/actors/running/runs-and-builds
+    checkedAt: "2026-10-17"
+  - key: dataset_items_pagination
+    label: Dataset items listing
+    value: "No default or documented maximum limit; offset default 0; clean/skipEmpty can return fewer items than limit; headers X-Apify-Pagination-Total and X-Apify-Pagination-Limit"
+    sourceUrl: https://docs.apify.com/api/v2/dataset-items-get
+    checkedAt: "2026-10-17"
+  - key: webhook_delivery
+    label: Webhook delivery behaviour
+    value: "Only 2XX counts as success; 11 retries with exponential back-off (about 1 min up to about 32 h); 2 min response timeout; in rare cases invoked more than once (make the endpoint idempotent)"
+    sourceUrl: https://docs.apify.com/platform/integrations/webhooks/actions
+    checkedAt: "2026-10-17"
+  - key: webhook_event_types
+    label: Actor run webhook event types
+    value: "ACTOR.RUN.CREATED, SUCCEEDED, FAILED, TIMED_OUT, ABORTED, RESURRECTED"
+    sourceUrl: https://docs.apify.com/platform/integrations/webhooks/events
+    checkedAt: "2026-10-17"
+  - key: api_rate_limit
+    label: API rate limits
+    value: "250000 requests/min global per user; default 60 requests/s per resource (higher on some endpoints, e.g. 400/s for Run Actor); 429 rate-limit-exceeded; official clients back off automatically"
+    sourceUrl: https://docs.apify.com/api/v2
+    checkedAt: "2026-10-17"
+  - key: memory_and_concurrency
+    label: Run memory range and concurrency
+    value: "Memory 128 to 32768 MB, power of 2; Free plan max 16384 MB and 25 concurrent runs per user"
+    sourceUrl: https://docs.apify.com/platform/limits
+    checkedAt: "2026-10-17"
+  - key: storage_retention
+    label: Run storage retention
+    value: "Unnamed storages (a run's default dataset) of runs beyond the 10 most recent are deleted after the plan's retention period; named storages are never deleted"
+    sourceUrl: https://docs.apify.com/platform/storage/usage
+    checkedAt: "2026-10-17"

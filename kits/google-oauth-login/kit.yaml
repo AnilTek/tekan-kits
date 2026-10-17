@@ -1,0 +1,85 @@
+# google-oauth-login — kit manifesti (ADR 0024 / tekan).
+# knowledge kit: projeye dosya yazmaz; SKILL.md agent oturumuna yüklenir. Değişen değerler aşağıda `facts`'te.
+id: google-oauth-login
+name: Google OAuth Login (single domain)
+kind: knowledge
+version: 1.0.0
+summary: 'Tek e-posta domainine kısıtlı iç araç için Google girişi: hd + email_verified sunucuda, redirect, çerez, bootstrap admin.'
+
+requires:
+  cli: []
+  secrets: [GOOGLE_CLIENT_SECRET, SESSION_SECRET]
+
+files: []
+
+sources:
+  - { title: "OpenID Connect (hd claim, sub, email_verified)", url: "https://developers.google.com/identity/openid-connect/openid-connect", kind: official_docs }
+  - { title: "OAuth 2.0 for web server applications (redirect URI rules, state)", url: "https://developers.google.com/identity/protocols/oauth2/web-server", kind: official_docs }
+  - { title: "Google Auth Platform: user type Internal vs External", url: "https://support.google.com/cloud/answer/15549945", kind: official_docs }
+  - { title: "Better Auth: Google provider", url: "https://www.better-auth.com/docs/authentication/google", kind: official_docs }
+  - { title: "Better Auth: options (baseURL, cookies)", url: "https://www.better-auth.com/docs/reference/options", kind: official_docs }
+  - { title: "Authlib: Starlette integration (OAuth 2 client)", url: "https://docs.authlib.org/en/stable/oauth2/client/web/starlette.html", kind: official_docs }
+  - { title: "Starlette: middleware (SessionMiddleware)", url: "https://starlette.dev/middleware/", kind: official_docs }
+  - { title: "Uvicorn: deployment (proxy headers)", url: "https://uvicorn.dev/deployment/", kind: official_docs }
+
+facts:
+  - key: hd_param_not_enforced
+    label: hd request parameter
+    value: "UI optimization only, not enforced; Google says not to rely on it to control access because client-side requests can be modified"
+    sourceUrl: https://developers.google.com/identity/openid-connect/openid-connect
+    checkedAt: "2026-10-17"
+  - key: hd_claim_check
+    label: hd claim in the ID token
+    value: "Must be checked when restricting access to members of certain domains; absence of the claim means the account does not belong to a Google hosted domain"
+    sourceUrl: https://developers.google.com/identity/openid-connect/openid-connect
+    checkedAt: "2026-10-17"
+  - key: sub_as_identity
+    label: Stable user identifier
+    value: "sub is unique among all Google Accounts and never reused; email may change and its domain cannot be relied on to identify Workspace / Cloud organization users"
+    sourceUrl: https://developers.google.com/identity/openid-connect/openid-connect
+    checkedAt: "2026-10-17"
+  - key: redirect_uri_exact_match
+    label: redirect_uri matching
+    value: "Must exactly match an authorized redirect URI; scheme, case and trailing slash must all match; otherwise redirect_uri_mismatch"
+    sourceUrl: https://developers.google.com/identity/protocols/oauth2/web-server
+    checkedAt: "2026-10-17"
+  - key: redirect_uri_validation_rules
+    label: Redirect URI validation rules
+    value: "HTTPS required (localhost exempt); no raw IP hosts (localhost IPs exempt); no wildcards; no fragment; no userinfo; no path traversal; TLD must be on the public suffix list"
+    sourceUrl: https://developers.google.com/identity/protocols/oauth2/web-server
+    checkedAt: "2026-10-17"
+  - key: external_testing_limits
+    label: External user type in Testing status
+    value: "Capped at 100 test users; a test user's authorization lapses 7 days after consent and their refresh token expires"
+    sourceUrl: https://support.google.com/cloud/answer/15549945
+    checkedAt: "2026-10-17"
+  - key: internal_user_type
+    label: Internal user type
+    value: "Only for projects associated with a Google Cloud Organization; limits authorization to that organization's members. External is available to any Google Account"
+    sourceUrl: https://support.google.com/cloud/answer/15549945
+    checkedAt: "2026-10-17"
+  - key: starlette_session_defaults
+    label: Starlette SessionMiddleware defaults
+    value: "same_site='lax', https_only=False (Secure flag off), max_age = 2 weeks, session_cookie='session'"
+    sourceUrl: https://starlette.dev/middleware/
+    checkedAt: "2026-10-17"
+  - key: uvicorn_forwarded_proto
+    label: Uvicorn behind a TLS-terminating proxy
+    value: "X-Forwarded-Proto is read for the request scheme; trusted proxy addresses are set with --forwarded-allow-ips; default value not stated on the page"
+    sourceUrl: https://uvicorn.dev/deployment/
+    checkedAt: "2026-10-17"
+  - key: better_auth_hd_option
+    label: Better Auth Google provider hd option
+    value: "Provider-level hd requires a verified hosted-domain claim and rejects tokens without hd; a custom getUserInfo replaces the built-in hd check"
+    sourceUrl: https://www.better-auth.com/docs/authentication/google
+    checkedAt: "2026-10-17"
+  - key: better_auth_callback_path
+    label: Better Auth default Google callback path
+    value: "/api/auth/callback/google (local: http://localhost:3000/api/auth/callback/google); changes with the auth base path"
+    sourceUrl: https://www.better-auth.com/docs/authentication/google
+    checkedAt: "2026-10-17"
+  - key: better_auth_base_url_and_cookies
+    label: Better Auth baseURL and Secure cookies
+    value: "baseURL (or BETTER_AUTH_URL) must be set explicitly to avoid redirect_uri_mismatch; cookies are Secure by default in production; advanced.useSecureCookies forces it"
+    sourceUrl: https://www.better-auth.com/docs/reference/options
+    checkedAt: "2026-10-17"

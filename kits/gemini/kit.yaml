@@ -1,0 +1,151 @@
+# gemini — kit manifesti (ADR 0024 / tekan).
+# knowledge kit: projeye dosya yazmaz; SKILL.md agent oturumuna yüklenir. Değişen değerler aşağıda `facts`'te.
+id: gemini
+name: Gemini (google-genai)
+kind: knowledge
+version: 1.0.0
+summary: google-genai ile Gemini'yi (API anahtarı ya da Vertex) doğru kimlikle, ölçülü maliyetle ve 429'a dayanıklı çağırma yöntemi.
+
+requires:
+  cli: []
+  secrets: [GEMINI_API_KEY, GOOGLE_APPLICATION_CREDENTIALS_JSON]
+
+files: []
+
+sources:
+  - { title: "Gemini API pricing", url: "https://ai.google.dev/gemini-api/docs/pricing", kind: pricing }
+  - { title: "Vertex AI generative AI pricing", url: "https://cloud.google.com/vertex-ai/generative-ai/pricing", kind: pricing }
+  - { title: "Gemini API models", url: "https://ai.google.dev/gemini-api/docs/models", kind: official_docs }
+  - { title: "Gemini API deprecations", url: "https://ai.google.dev/gemini-api/docs/deprecations", kind: changelog }
+  - { title: "Gemini API rate limits", url: "https://ai.google.dev/gemini-api/docs/rate-limits", kind: official_docs }
+  - { title: "Gemini API thinking", url: "https://ai.google.dev/gemini-api/docs/thinking", kind: official_docs }
+  - { title: "Gemini API context caching", url: "https://ai.google.dev/gemini-api/docs/caching", kind: official_docs }
+  - { title: "Vertex AI context caching overview", url: "https://docs.cloud.google.com/vertex-ai/generative-ai/docs/context-cache/context-cache-overview", kind: official_docs }
+  - { title: "Gemini API structured output", url: "https://ai.google.dev/gemini-api/docs/structured-output", kind: official_docs }
+  - { title: "Gemini API video understanding", url: "https://ai.google.dev/gemini-api/docs/video-understanding", kind: official_docs }
+  - { title: "Vertex AI video understanding", url: "https://docs.cloud.google.com/vertex-ai/generative-ai/docs/multimodal/video-understanding", kind: official_docs }
+  - { title: "Gemini API vs Vertex AI (migrate)", url: "https://docs.cloud.google.com/vertex-ai/generative-ai/docs/migrate/migrate-google-ai", kind: official_docs }
+  - { title: "Vertex AI locations and global endpoint", url: "https://docs.cloud.google.com/vertex-ai/generative-ai/docs/learn/locations", kind: official_docs }
+  - { title: "Vertex AI error code 429", url: "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/deploy/error-code-429", kind: official_docs }
+  - { title: "Gemini API errors", url: "https://ai.google.dev/gemini-api/docs/api-errors", kind: official_docs }
+  - { title: "Gemini API text generation (sampling parameters)", url: "https://ai.google.dev/gemini-api/docs/text-generation", kind: official_docs }
+  - { title: "Gemini API Interactions API", url: "https://ai.google.dev/gemini-api/docs/interactions", kind: official_docs }
+  - { title: "google-genai Python SDK", url: "https://github.com/googleapis/python-genai", kind: repo }
+  - { title: "google-genai SDK reference", url: "https://googleapis.github.io/python-genai/", kind: official_docs }
+
+facts:
+  - key: sdk_latest_version
+    label: google-genai latest release on PyPI (requires Python >=3.10, pydantic >=2.12.5)
+    value: "2.31.0 (released 2026-10-14)"
+    sourceUrl: https://pypi.org/project/google-genai/
+    checkedAt: "2026-10-17"
+  - key: endpoints_by_mode
+    label: Endpoint host per mode
+    value: "Gemini API key mode: generativelanguage.googleapis.com; Vertex mode: aiplatform.googleapis.com"
+    sourceUrl: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/migrate/migrate-google-ai
+    checkedAt: "2026-10-17"
+  - key: client_env_vars
+    label: SDK environment variables (read when constructor args are absent)
+    value: "API key: GEMINI_API_KEY or GOOGLE_API_KEY (GOOGLE_API_KEY wins if both set). Vertex switch: GOOGLE_GENAI_USE_VERTEXAI (or GOOGLE_GENAI_USE_ENTERPRISE, which wins on conflict); GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION. Constructor flag: vertexai=True (or enterprise=True). project/location with a non-Vertex client raises ValueError; credentials and api_key together raise ValueError. In Vertex mode location defaults to global."
+    sourceUrl: https://github.com/googleapis/python-genai
+    checkedAt: "2026-10-17"
+  - key: vertex_vs_api_data_use
+    label: Prompt/response use for product improvement
+    value: "Gemini API free tier: may be used to improve Google products; paid tier: never. Vertex: never. Vertex adds IAM auth, data residency options, CMEK, Provisioned Throughput, SLA; API key mode has none of the compliance certifications (HIPAA, SOC2)."
+    sourceUrl: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/migrate/migrate-google-ai
+    checkedAt: "2026-10-17"
+  - key: model_ids_stable
+    label: Stable text model ids listed on the models page
+    value: "gemini-3.8-flash, gemini-3.6-flash, gemini-3.5-flash-lite, gemini-3.1-flash-lite (Stable); gemini-3-flash-preview, gemini-3.1-pro-preview (preview). 2.5 family: not deprecated but access limited to projects that used it before."
+    sourceUrl: https://ai.google.dev/gemini-api/docs/models
+    checkedAt: "2026-10-17"
+  - key: model_naming_rules
+    label: Model id kinds and notice periods
+    value: "stable id = pinned, recommended for production; preview = at least 2 weeks notice before deprecation; *-latest alias = hot-swapped to the newest release; experimental = not for production"
+    sourceUrl: https://ai.google.dev/gemini-api/docs/models
+    checkedAt: "2026-10-17"
+  - key: model_lifecycle_dates
+    label: Shutdown / routing dates relevant to older ids
+    value: "gemini-2.0-flash and gemini-2.0-flash-lite: shut down 2026-06-01. gemini-3.1-flash-lite: shutdown 2027-05-07 (replacement gemini-3.5-flash-lite). gemini-3.5-flash and gemini-3.7-flash: endpoint not shutting down, requests auto-routed to gemini-3.6-flash and gemini-3.8-flash respectively. gemini-3.6-flash: no shutdown date announced."
+    sourceUrl: https://ai.google.dev/gemini-api/docs/deprecations
+    checkedAt: "2026-10-17"
+  - key: price_gemini_3_6_flash_api
+    label: gemini-3.6-flash paid standard price per 1M tokens, Gemini API (output includes thinking)
+    value: "input $0.75 / output $3.75 through 2026-12-31; input $1.50 / output $7.50 starting 2027-01-01. Batch and Flex: half of standard."
+    sourceUrl: https://ai.google.dev/gemini-api/docs/pricing
+    checkedAt: "2026-10-17"
+  - key: price_gemini_lite_api
+    label: Flash-Lite paid standard price per 1M tokens, Gemini API (output includes thinking)
+    value: "gemini-3.5-flash-lite input $0.30 / output $2.50; gemini-3.1-flash-lite input $0.25 (text/image/video) / output $1.50"
+    sourceUrl: https://ai.google.dev/gemini-api/docs/pricing
+    checkedAt: "2026-10-17"
+  - key: vertex_global_vs_regional_price
+    label: Vertex price for gemini-3.6-flash, global vs non-global endpoint (per 1M tokens)
+    value: "Global input $0.75 / output $3.75 through 2026-12-31 ($1.50 / $7.50 from 2027-01-01); non-global is 10% higher ($0.825 / $4.125, then $1.65 / $8.25)"
+    sourceUrl: https://cloud.google.com/vertex-ai/generative-ai/pricing
+    checkedAt: "2026-10-17"
+  - key: thinking_controls
+    label: Thinking on Gemini 3.x
+    value: "Controlled with thinking_level (gemini-3.6-flash: minimal/low/medium/high, default medium; gemini-3.5-flash-lite: default minimal). No full off documented for 3.x. Thinking tokens are billed as output. SDK ThinkingConfig.thinking_budget is documented as model dependent (0 = disabled, -1 = automatic)."
+    sourceUrl: https://ai.google.dev/gemini-api/docs/thinking
+    checkedAt: "2026-10-17"
+  - key: sampling_params_3_6
+    label: temperature / top_p / top_k on Gemini 3.6+ and 4
+    value: "Custom values are ignored and trigger deprecation warning headers; the troubleshooting page warns they will return 400 in a future release. Remove them."
+    sourceUrl: https://ai.google.dev/gemini-api/docs/text-generation
+    checkedAt: "2026-10-17"
+  - key: implicit_cache_minimum
+    label: Implicit caching (on by default) minimum prompt size
+    value: "Gemini API: 4,096 tokens for gemini-3.6-flash (2,048 for 2.5 Flash/Pro). Vertex: 4,096 for Gemini 3 (6,144 for 3.7 Flash, 3.8 Flash, 3 Flash Preview, 3.1 Pro Preview), 2,048 for Gemini 2. Hit size reported in usage_metadata.cached_content_token_count."
+    sourceUrl: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/context-cache/context-cache-overview
+    checkedAt: "2026-10-17"
+  - key: api_rate_limit_model
+    label: Gemini API rate limit scope and reset
+    value: "Per project (not per API key); measured as RPM, TPM, RPD, any one exceeded triggers the error; RPD resets at midnight Pacific; limits differ by model and tier; spend-based limits use a rolling 10-minute window; exceeded spend limit returns 429 RESOURCE_EXHAUSTED"
+    sourceUrl: https://ai.google.dev/gemini-api/docs/rate-limits
+    checkedAt: "2026-10-17"
+  - key: api_usage_tiers
+    label: Gemini API usage tiers
+    value: "Free: active project; Tier 1: billing account linked (cap $250); Tier 2: $100 cumulative paid + 3 days (cap $2,000); Tier 3: $1,000 cumulative + 30 days. Upgrades are automatic; approval not guaranteed."
+    sourceUrl: https://ai.google.dev/gemini-api/docs/rate-limits
+    checkedAt: "2026-10-17"
+  - key: vertex_429_guidance
+    label: Vertex pay-as-you-go 429 guidance
+    value: "Use the global endpoint instead of a regional one; truncated exponential backoff; Quota Increase Request; smooth spikes and ramp traffic gradually (acceleration limits); Provisioned Throughput for steady capacity"
+    sourceUrl: https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/deploy/error-code-429
+    checkedAt: "2026-10-17"
+  - key: vertex_global_endpoint_residency
+    label: Vertex global endpoint and data residency
+    value: "Global endpoint can improve availability and reduce 429; endpoints do not guarantee data residency or in-region ML processing; multi-region us/eu endpoints exist for jurisdiction-bound processing"
+    sourceUrl: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/learn/locations
+    checkedAt: "2026-10-17"
+  - key: api_error_codes
+    label: Gemini API error statuses to treat differently
+    value: "400 invalid_request/failed_precondition (disabled billing); 403 permission_denied; 404 model_not_found; 429 rate_limit_exceeded (per-minute) vs quota_exceeded (daily); 503 service_unavailable; 504 deadline_exceeded. Retry 429/503 with exponential backoff; 402 payment_required: do not retry."
+    sourceUrl: https://ai.google.dev/gemini-api/docs/api-errors
+    checkedAt: "2026-10-17"
+  - key: sdk_error_and_retry_defaults
+    label: google-genai error class, retry and timeout behaviour (read from the 2.31.0 package source)
+    value: "Errors: errors.APIError with .code, subclasses ClientError (4xx) and ServerError (5xx). No retry unless HttpOptions.retry_options is set; HttpRetryOptions defaults when set: 5 attempts, 1s initial delay, 60s max delay, retries 408/429/5xx. HttpOptions.timeout is in milliseconds. HttpOptions.base_url overrides the endpoint. Response carries usage_metadata and model_version."
+    sourceUrl: https://github.com/googleapis/python-genai
+    checkedAt: "2026-10-17"
+  - key: structured_output_guarantee
+    label: Structured output guarantee
+    value: "Output is syntactically valid JSON for the schema; values are not guaranteed correct or complete, always validate in application code. Not all JSON Schema features are supported; very large or deeply nested schemas may be rejected."
+    sourceUrl: https://ai.google.dev/gemini-api/docs/structured-output
+    checkedAt: "2026-10-17"
+  - key: youtube_url_gemini_api
+    label: YouTube URL as video input, Gemini API
+    value: "Preview, no charge for the URL feature itself (tokens still billed). Public videos only (not private/unlisted). Free tier: max 8 hours of YouTube video per day; paid: no length-based limit. Gemini 2.5 and later: up to 10 videos per request. Default about 100 tokens per second of video (about 300 at high media resolution). Clipping via start_offset/end_offset, fps default 1."
+    sourceUrl: https://ai.google.dev/gemini-api/docs/video-understanding
+    checkedAt: "2026-10-17"
+  - key: youtube_url_vertex
+    label: YouTube URL as video input, Vertex
+    value: "Preview (Pre-GA terms). Only one YouTube URL per request. Video must be public or owned by the signed-in account. fileUri requires mimeType."
+    sourceUrl: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/multimodal/video-understanding
+    checkedAt: "2026-10-17"
+  - key: interactions_api_status
+    label: Interactions API vs generateContent
+    value: "Interactions API is GA since June 2026 and recommended for new projects; generateContent is described as legacy but fully supported. Current docs examples (video, structured output) are written for the Interactions API."
+    sourceUrl: https://ai.google.dev/gemini-api/docs/interactions
+    checkedAt: "2026-10-17"

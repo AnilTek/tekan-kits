@@ -1,0 +1,126 @@
+# railway — kit manifesti (ADR 0024 / tekan).
+# seed: bir kez kopyalanır, sonra projenin malı; güncelleme dokunmaz. {{PROJECT_NAME}} ve {{TODAY}} uygulamada doldurulur.
+# Değişen değerler (süreler, fiyatlar, tarihler) aşağıda `facts`'te; SKILL.md gövdesine gömülmez.
+id: railway
+name: Railway
+kind: setup
+version: 1.0.0
+summary: "Railway'e servis deploy etme: IaC tanımı, healthcheck, pre-deploy migration, özel ağ, ortam-dal eşlemesi, maliyet kontrolü."
+
+requires:
+  cli: [railway, node]
+  secrets: []
+
+files:
+  - { path: .railway/railway.ts, mode: seed }
+
+# Dosyada bu satırlar yoksa sona eklenir; var olan satırlara dokunulmaz.
+ensure_lines:
+  .gitignore:
+    - "node_modules/"
+
+# Kopyadan sonra agent turu: SKILL.md "Yöntem" bölümü, adım 3.
+agent_step: fill_placeholders
+
+sources:
+  - { title: "Config as Code (deprecated)", url: "https://docs.railway.com/reference/config-as-code", kind: official_docs }
+  - { title: "Infrastructure as Code", url: "https://docs.railway.com/infrastructure-as-code", kind: official_docs }
+  - { title: "Infrastructure as Code reference", url: "https://docs.railway.com/infrastructure-as-code/reference", kind: official_docs }
+  - { title: "railway config (CLI)", url: "https://docs.railway.com/cli/config", kind: official_docs }
+  - { title: "Healthchecks", url: "https://docs.railway.com/deployments/healthchecks", kind: official_docs }
+  - { title: "Pre-deploy command", url: "https://docs.railway.com/deployments/pre-deploy-command", kind: official_docs }
+  - { title: "Set a start command", url: "https://docs.railway.com/deployments/start-command", kind: official_docs }
+  - { title: "Restart policy", url: "https://docs.railway.com/deployments/restart-policy", kind: official_docs }
+  - { title: "Controlling GitHub autodeploys (Wait for CI)", url: "https://docs.railway.com/deployments/github-autodeploys", kind: official_docs }
+  - { title: "Private networking: how it works", url: "https://docs.railway.com/networking/private-networking/how-it-works", kind: official_docs }
+  - { title: "Cron jobs", url: "https://docs.railway.com/cron-jobs", kind: official_docs }
+  - { title: "Environments", url: "https://docs.railway.com/environments", kind: official_docs }
+  - { title: "Dockerfiles (build-time variables)", url: "https://docs.railway.com/builds/dockerfiles", kind: official_docs }
+  - { title: "Variables", url: "https://docs.railway.com/variables", kind: official_docs }
+  - { title: "Serverless", url: "https://docs.railway.com/deployments/serverless", kind: official_docs }
+  - { title: "Pricing (docs)", url: "https://docs.railway.com/pricing", kind: pricing }
+  - { title: "Cost control", url: "https://docs.railway.com/pricing/cost-control", kind: official_docs }
+  - { title: "Railway pricing", url: "https://railway.com/pricing", kind: pricing }
+  - { title: "railway TypeScript SDK (railway/iac)", url: "https://github.com/railwayapp/railway-ts-sdk", kind: repo }
+
+facts:
+  - key: config_as_code_end
+    label: railway.json / railway.toml (Config as Code) support
+    value: "Deprecated; stops being read on 2026-12-01. Replacement: Infrastructure as Code (.railway/railway.ts)"
+    sourceUrl: https://docs.railway.com/infrastructure-as-code
+    checkedAt: "2026-10-17"
+  - key: iac_status
+    label: Infrastructure as Code authoring status
+    value: "TypeScript generally available; Python and Go in beta. Engine ships in the Railway CLI (SDK needs CLI 5.42.1 or newer)"
+    sourceUrl: https://docs.railway.com/infrastructure-as-code
+    checkedAt: "2026-10-17"
+  - key: iac_sdk_version
+    label: railway npm package (railway/iac), latest and Node requirement
+    value: "3.16.0, Node >= 22, ESM"
+    sourceUrl: https://github.com/railwayapp/railway-ts-sdk
+    checkedAt: "2026-10-17"
+  - key: healthcheck_default_timeout
+    label: Healthcheck default timeout
+    value: "300 seconds"
+    sourceUrl: https://docs.railway.com/deployments/healthchecks
+    checkedAt: "2026-10-17"
+  - key: healthcheck_behavior
+    label: Healthcheck semantics
+    value: "Any 2xx passes; request host is healthcheck.railway.app; queried only at deploy start (not polled afterwards); on failure the previous deployment stays active"
+    sourceUrl: https://docs.railway.com/deployments/healthchecks
+    checkedAt: "2026-10-17"
+  - key: predeploy_behavior
+    label: Pre-deploy command
+    value: "Runs after build, before deploy, in a separate container with private network and variables; not retried; non-zero exit stops the deploy; no volumes, no persisted files; no time limit by default, optional timeout 1-3600 seconds"
+    sourceUrl: https://docs.railway.com/deployments/pre-deploy-command
+    checkedAt: "2026-10-17"
+  - key: start_command_exec_form
+    label: Start command with a Dockerfile or image
+    value: "Overrides ENTRYPOINT in exec form (no variable expansion); wrap in /bin/sh -c to use $PORT"
+    sourceUrl: https://docs.railway.com/deployments/start-command
+    checkedAt: "2026-10-17"
+  - key: restart_policy_default
+    label: Default restart policy
+    value: "ON_FAILURE, max 10 restarts"
+    sourceUrl: https://docs.railway.com/deployments/restart-policy
+    checkedAt: "2026-10-17"
+  - key: private_network_dns
+    label: Private networking addressing
+    value: "<service>.railway.internal; environments created after 2025-10-16 resolve IPv4 and IPv6, legacy environments IPv6 only"
+    sourceUrl: https://docs.railway.com/networking/private-networking/how-it-works
+    checkedAt: "2026-10-17"
+  - key: wait_for_ci
+    label: Wait for CI (GitHub autodeploy gate)
+    value: "Deployment waits in WAITING until GitHub Actions workflow runs finish; a failed workflow skips the deploy; unfinished after 2 hours is skipped; other GitHub apps' checks ignored"
+    sourceUrl: https://docs.railway.com/deployments/github-autodeploys
+    checkedAt: "2026-10-17"
+  - key: cron_behavior
+    label: Cron services
+    value: "Schedules are UTC; service must exit when done; a run is skipped while the previous execution is still active"
+    sourceUrl: https://docs.railway.com/cron-jobs
+    checkedAt: "2026-10-17"
+  - key: duplicate_environment_secrets
+    label: Duplicating an environment
+    value: "Sealed variables are not copied when an environment is duplicated (nor into PR environments)"
+    sourceUrl: https://docs.railway.com/variables
+    checkedAt: "2026-10-17"
+  - key: plan_prices
+    label: Plan minimum usage (includes the same amount of usage credit)
+    value: "Hobby $5/month, Pro $20/month"
+    sourceUrl: https://railway.com/pricing
+    checkedAt: "2026-10-17"
+  - key: resource_prices
+    label: Usage prices
+    value: "RAM $10/GB/month, CPU $20/vCPU/month, volume $0.15/GB/month, egress $0.05/GB"
+    sourceUrl: https://docs.railway.com/pricing
+    checkedAt: "2026-10-17"
+  - key: usage_limits
+    label: Usage limits (soft email alert and hard limit)
+    value: "Hard limit takes all workloads offline, minimum $10; soft limit only emails; CLI: railway usage limit set --target workspace --soft N --hard N"
+    sourceUrl: https://docs.railway.com/pricing/cost-control
+    checkedAt: "2026-10-17"
+  - key: serverless_sleep
+    label: Serverless (app sleeping)
+    value: "Service counts as inactive after 5 minutes without outbound packets; takes effect only after the next deploy"
+    sourceUrl: https://docs.railway.com/deployments/serverless
+    checkedAt: "2026-10-17"
