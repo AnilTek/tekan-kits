@@ -1,0 +1,20 @@
+# Boş bir veritabanında migration + seed sıfırdan uygulanır (yerel ortamın `make db-reset`'i ile).
+# Kaynak: tekan-kits/local-env (seed; toolchain adımları projenin malı).
+name: db-reset
+
+on:
+  pull_request:
+  push:
+    branches: [main, dev]
+
+jobs:
+  db-reset:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # <PLACEHOLDER: stack'in toolchain kurulumu ve bağımlılık adımları (migrate komutu çalışsın diye)>
+      - name: Boş veritabanında sıfırla (sil, migrate, seed)
+        run: make db-reset
+      - name: Başarısızsa servis günlükleri
+        if: failure()
+        run: docker compose logs --no-color

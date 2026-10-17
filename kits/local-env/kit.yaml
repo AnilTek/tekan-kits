@@ -1,0 +1,84 @@
+# local-env — kit manifesti (ADR 0024 / tekan).
+# managed: kit'in malı, sürümle güncellenir; projede düzenlenmez, değişken içermez (her projede aynı bayt).
+# seed: bir kez kopyalanır, sonra projenin malı; güncelleme dokunmaz. {{PROJECT_NAME}} uygulamada doldurulur;
+# <PLACEHOLDER: ...> alanlarını agent repoyu okuyarak doldurur (SKILL.md "Yöntem", adım 3).
+# Değişen değerler (portlar, veri yolu, kural ayrıntıları) aşağıda `facts`'te.
+id: local-env
+name: Local environment
+kind: setup
+version: 1.0.0
+summary: "Yerel ortam sözleşmesi: Docker Postgres, migration'dan şema, seed, tek komutla db-reset, mock'lar ve CI denetimi."
+
+requires:
+  cli: [docker, git]
+  secrets: []
+
+files:
+  - { path: assets/scripts/env-check.sh, mode: managed }
+  - { path: .github/workflows/env-check.yml, mode: managed }
+  - { path: compose.yaml, mode: seed }
+  - { path: Makefile, mode: seed }
+  - { path: .env.example, mode: seed }
+  - { path: db/seed.sql, mode: seed }
+  - { path: .github/workflows/db-reset.yml, mode: seed }
+
+# Dosyada bu satırlar yoksa sona eklenir; var olan satırlara dokunulmaz.
+ensure_lines:
+  .gitignore:
+    - ".env"
+    - ".local/snapshots/"
+
+# Kopyadan sonra agent turu: SKILL.md "Yöntem" bölümü, adım 3.
+agent_step: fill_placeholders
+
+sources:
+  - { title: "Compose application model", url: "https://docs.docker.com/compose/intro/compose-application-model/", kind: official_docs }
+  - { title: "docker compose up", url: "https://docs.docker.com/reference/cli/docker/compose/up/", kind: official_docs }
+  - { title: "docker compose down", url: "https://docs.docker.com/reference/cli/docker/compose/down/", kind: official_docs }
+  - { title: "Compose interpolation", url: "https://docs.docker.com/reference/compose-file/interpolation/", kind: official_docs }
+  - { title: "Compose project name", url: "https://docs.docker.com/compose/how-tos/project-name/", kind: official_docs }
+  - { title: "Postgres Docker Official Image", url: "https://github.com/docker-library/docs/blob/master/postgres/README.md", kind: repo }
+  - { title: "Mailpit Docker images", url: "https://mailpit.axllent.org/docs/install/docker/", kind: official_docs }
+  - { title: "Mailpit API v1", url: "https://mailpit.axllent.org/docs/api-v1/", kind: official_docs }
+
+facts:
+  - key: compose_file_name
+    label: Compose file name
+    value: "compose.yaml is preferred (also compose.yml, docker-compose.yaml, docker-compose.yml); if both compose.yaml and a legacy name exist, compose.yaml is used"
+    sourceUrl: https://docs.docker.com/compose/intro/compose-application-model/
+    checkedAt: "2026-10-17"
+  - key: up_wait
+    label: docker compose up --wait
+    value: "Waits for services to be running|healthy; implies detached mode"
+    sourceUrl: https://docs.docker.com/reference/cli/docker/compose/up/
+    checkedAt: "2026-10-17"
+  - key: down_volumes
+    label: docker compose down -v
+    value: "Removes named volumes declared in the volumes section and anonymous volumes attached to containers"
+    sourceUrl: https://docs.docker.com/reference/cli/docker/compose/down/
+    checkedAt: "2026-10-17"
+  - key: interpolation_syntax
+    label: Compose variable interpolation
+    value: "${VAR:-default} uses default when unset or empty; ${VAR:?error} aborts with the error text when unset or empty"
+    sourceUrl: https://docs.docker.com/reference/compose-file/interpolation/
+    checkedAt: "2026-10-17"
+  - key: project_name_rule
+    label: Compose project name
+    value: "Only lowercase letters, digits, dashes and underscores; must start with a lowercase letter or digit; top-level name: ranks below the -p flag and COMPOSE_PROJECT_NAME, above the directory name"
+    sourceUrl: https://docs.docker.com/compose/how-tos/project-name/
+    checkedAt: "2026-10-17"
+  - key: postgres_volume_path
+    label: Postgres image data volume mount path
+    value: "Postgres 17 and below: mount at /var/lib/postgresql/data (mounting /var/lib/postgresql will not persist data). Postgres 18 and above: mount at /var/lib/postgresql (PGDATA became /var/lib/postgresql/<major>/docker)"
+    sourceUrl: https://github.com/docker-library/docs/blob/master/postgres/README.md
+    checkedAt: "2026-10-17"
+  - key: mailpit_ports
+    label: Mailpit container default ports
+    value: "Web UI 8025, SMTP 1025; image axllent/mailpit"
+    sourceUrl: https://mailpit.axllent.org/docs/install/docker/
+    checkedAt: "2026-10-17"
+  - key: mailpit_api
+    label: Mailpit REST API address
+    value: "Served by the web UI port under /api/v1 (e.g. http://localhost:8025/api/v1/)"
+    sourceUrl: https://mailpit.axllent.org/docs/api-v1/
+    checkedAt: "2026-10-17"

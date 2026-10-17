@@ -1,0 +1,55 @@
+---
+name: apify
+description: How to run Apify actors from code without burning credits or getting silent partial data — cost caps and budget checks, run-sync vs async start + polling vs webhook, dataset pagination, timeouts, input validation, failed/partial runs, picking an actor. Use whenever code touches APIFY_TOKEN, apify-client / ApifyClient, api.apify.com, run-sync-get-dataset-items, usageTotalUsd, maxTotalChargeUsd, defaultDatasetId, or scrapes Instagram, TikTok, X/Twitter, Meta Ad Library or Google Trends through an actor.
+---
+
+# apify
+
+## Ne
+
+Apify actor'lerini (üçüncü parti ya da resmî scraper'lar) koddan çalıştırırken kredi harcamadan ve "başarılı ama eksik/yanlış veri" tuzağına düşmeden kullanma yöntemi: maliyet tavanı, senkron/asenkron seçimi, sayfalama, hata ve kısmi koşu yönetimi, actor seçimi.
+
+## Neyi çözer
+
+Önceki projelerde (bu projede değil — kullanıcıya böyle aktar) para ya da doğruluk kaybederek öğrenilenler. Run `SUCCEEDED` dönüp veri boş, kesilmiş ya da başka bir şeyin verisi çıktı: zorunlu bir bayrak verilmeyince actor başka moda düştü ve boş timeline döndürdü, tek koşuda çok URL verilince sonraki sayfalar sessizce sıfıra düştü, `maxItems` yüksek verilince actor çöp dolgu satırı ekledi. Sağlayıcının bildirdiği maliyete güvenilemedi: `usageTotalUsd` bazı koşularda 0 geldi, bir actor'de sonuç başı ücret compute'tan sonra oturduğu için bildirilen tutar gerçeğin beşte biriydi. Gizli ücret kalemleri çıktı: bir profil actor'ünde "hakkında" bölümü açılınca kayıt başı maliyet 3,6 kat, bir graf-dışa-aktarma seçeneğinde fatura 2 kat oldu; takipçi filtreleri elenen adaylar dahil faturalandı (114 kayıt faturalandı, 72 teslim edildi). Bir test gerçek actor çağırıp para harcadı ve geri alınan DB işlemi yüzünden harcamanın izi kalmadı. Ağ hatası ya da zaman aşımında tur "running", maliyet NULL kaldı ve bütçe muhasebesi harcamayı görmedi.
+
+## Doğruluk kaynakları
+
+- Resmî dokümanlar ve fiyat sayfası `kit.yaml` → `sources` listesinde: https://docs.apify.com , https://apify.com/pricing
+- **Sayıları (süreler, tavanlar, ücretler, kotalar) bu dosyanın yanındaki `kit.yaml` → `facts`'ten oku** (kaynağı ve kontrol tarihiyle); ezberindeki değer eski olabilir. Actor'ün kendi fiyatı ve girdi şeması Store sayfasında durur ve actor güncellenince değişir: koşmadan önce oradan oku.
+- Actor'ün döndürdüğü alan listesi alanın anlamını ya da doluluğunu garanti etmez; küçük bir deneme koşusunda doluluğu ölç.
+
+## Yöntem
+
+1. **Para harcamadan önce uygulama tarafında kapı kur.** Apify bir döngüyü durdurmaz. Çağrıdan önce `tahmin = birim fiyat × birim sayısı + varsa koşu başı sabit ücret` hesapla; günlük/aylık tavan (kaynak başına ve global) aşılıyorsa çağrı yapma ve nedenini kayda yaz. Ek olarak koşuya `maxTotalChargeUsd` ver (`facts` → `max_total_charge_usd`). `maxItems` yalnız pay-per-result actor'de ücretlenen kaydı sınırlar (`max_items_semantics`).
+2. **Önce küçük, sonra büyük.** Yeni actor ya da yeni parametre için 1–3 girdiyle ölç, `chargedEventCounts` ve maliyeti oku, sonra ölçekle. Açılışı ücretli kalemler (hakkında bölümü, graf dışa aktarma, tarih/popülerlik filtresi, altyazı/transkript, video indirme, profil zenginleştirme) için varsayılan KAPALI; her açışı ölçerek aç. Elenen sonucu da faturalayan filtreleri (takipçi bandı gibi) kullanma, süzmeyi kendi tarafında yap.
+3. **Fiyat tabanını üst uçtan yaz.** Fiyat bir aralıksa (ör. 1,7–2,2) bütçe tahminine üst ucu koy; alt ucu yazmak harcamayı olduğundan az sanmaktır. Maliyet bir roster'a bağlıysa (aktif anahtar kelime sayısı gibi) roster büyüyünce yıllık tahmini yeniden hesapla.
+4. **Maliyeti kaydederken sıfıra güvenme.** Koşu biter bitmez okunan `usageTotalUsd` ön değer olabilir (`run_cost_preliminary`): ~10 sn sonra yeniden oku. Hâlâ 0/boşsa ya da tahminden düşükse tahmini yaz, `cost_source = estimated|provider` ayrımını kaydet ve rapor bunu söylesin. Bilinmeyen maliyeti uydurma; NULL bırak, tur durumunu `failed` yap.
+5. **Senkron mı, asenkron mu?** `run-sync-get-dataset-items` kısa koşular için; sınırı `facts` → `sync_run_timeout` (aşılırsa 408 ve run'ın akıbeti belgede yok: tekrar denemeden önce konsolda/`GET run` ile bak, yoksa aynı iş iki kez faturalanabilir). Uzun ya da belirsiz süreli iş: `start` ile başlat, `defaultDatasetId` ve run kimliğini kaydet, durumu `GET run` ile yokla (`waitForFinish` tavanı `wait_for_finish_max`). Önceki projelerde webhook kullanılmadı (senkron çağrı ya da bekleyen `call` + yoklama yetti). Webhook seçersen resmî davranışa göre kur (`webhook_delivery`, `webhook_event_types`): uç 2XX'i hemen dönsün, işi sonra yapsın, aynı olay tekrar gelebilir (idempotent), ve olay gelmese de run durumu `GET run` ile doğrulanabilsin.
+6. **Durumu açıkça ele al.** Terminal durumlar `run_statuses`'ta. `SUCCEEDED` dışındakinde veriyi başarı say(ma); `TIMED-OUT`/`ABORTED` koşunun dataset'inde o ana kadarki kayıtlar bulunabilir: kullanacaksan kısmi olarak işaretle, tam sayma. Çağrıyı try/finally ile sar: istisna olursa turu `failed` kapat, açık bırakma. İstemci sürümüne göre yanıt dict + camelCase ya da nesne + snake_case olabilir (`'Run' object has no attribute 'get'` hatası actor başarılıyken veri yazmayı düşürdü): ikisini de okuyan küçük bir `field()` yardımcısı kullan.
+7. **Dataset'i bütün oku ve sayısını doğrula.** `defaultDatasetId` üzerinde `iterate_items()` ya da `offset/limit` ile sayfala (`dataset_items_pagination`); `clean`/`skipEmpty` limitten az döndürebilir. `X-Apify-Pagination-Total` ile okunan sayıyı karşılaştır. Ham çıktıyı her tur kendi kaydına yaz, üstüne yazma; çıktı URL'leri (CDN) kalıcı değil, gerekeni indir. Run'ın depolaması plana göre silinir (`storage_retention`).
+8. **Girdiyi koşmadan doğrula, çıktıyı şeklinden doğrula.** Girdi şemasındaki tip hatası (sayı yerine string beklenen alan) koşu başlamadan reddedilir ve para harcanmaz: ilk denemeyi `--dry-run` ile payload'u basarak yap. Çıktıda zorunlu alanları denetle; boş liste ya da 2xx + boş gövde başarı DEĞİL, şekil hatasıdır. Dolu gelen ama anlamı farklı alanları (sabitlenmiş gönderi, reklam satırı) actor'ün filtresine bırakma, kendi tarafında tekrar süz.
+9. **Tamlık denetimi.** Actor "gerçek toplam" döndürüyorsa (`total` gibi) `dönen >= total` doğrula; küçük tolerans normal, kalıcı eksik `partial`. Çok girdi/çok sayfa tek koşuda verilince son girdiler kesilebilir: eksik görürsen girdi başına ayrı koşu dene (koşu başı sabit ücreti hesaba kat). Aksine, girdi dizisi alıp koşu başına ek ücret almayan actor'lerde tek koşuda toplu ver. Bazı terimlerde kronik boş dönüş normaldir: koşuyu `failed` değil `partial` kapat. Tüm sorgular boşsa "kaynak bozulmuş olabilir" uyarısı ver, "veri yok" deme.
+10. **Hata sınıfları.** 429 ve 5xx: üstel bekleme, en çok 3 deneme (`api_rate_limit`; resmî istemci bunu kendisi yapar, üstüne ikinci katman ekleme). 401/403 (token geçersiz ya da kiralık actor kiralanmamış): yeniden deneme yok, aynı hata tüm koşuları etkilediği için turu hemen durdur. Başarı kodu 200 değil 201 de olabilir: 2xx kabul et.
+11. **Actor seç.** Önce resmî Apify actor'ü; üçüncü partide bakım, başarı oranı ve "under maintenance" riski var. Aday için Store sayfasında aylık kullanıcı, son güncelleme, başarı oranı ve bakım rozetine bak (arama sonucu başlığında görünmez). Aylardır güncellenmemiş scraper elenir: Instagram/TikTok scraper'ları bu sürede kırılıyor. Tek kullanıcılı/tek kişilik actor'ü yedek yol olmadan bağlama. Actor kimliğini ezberden ya da başka bir yerden alma; var olmayan kimlik `record-not-found` döndü. Fiyat modelini (`pricing_models`) ve kiralık olup olmadığını koşmadan öğren.
+12. **Testler ücretli istemci kuramaz.** Test ortamında ücretli istemci kurulumu engellenir (fixture ile), böylece "gerçek actor'e giden test" CI'da değil yazarken patlar. Ücretli akışı yalnız elle ve kasıtlı koşarak ölç.
+13. **Yerel ortam:** istemci adresi `APIFY_BASE_URL`'den okunur (önceki projelerde `APIFY_API_BASE` adıyla da görüldü); yerelde mock sunucu, dışarıda `https://api.apify.com`. Prod koduna mock dalı girmez. Token'ı `Authorization: Bearer` başlığıyla gönder, URL'ye (`?token=`) koyma; repoya ve loga yazma.
+14. **Harcamayı sağlayıcıdan da kontrol et.** Hesap kullanımı için `GET /v2/users/me/limits` (önceki bir projede aylık kullanımı ve tavanı buradan okudu); uygulama kayıtlarıyla uyuşmuyorsa kayıtlar eksiktir.
+
+15. **Instagram actor'leri:** profil actor'ünün son gönderi listesi sabitlenmişleri de içerir (`isPinned`): örneklem "son N + sabitlenmiş" olur (önceki projede etkileşim medyanı %18,5 şişti). Etiketi arama modunda aratmak alakasız etiket adları döndürür: bilinen etiket için doğrudan URL ver. Liste uçları takipçi sayısı vermez, ikinci adım gerekir. "Üst gönderiler" alanı sessizce boş dönebilir. Ondalık gelen etiket gönderi sayısı ~100 kat şişik olabilir (n=1 ölçüm; güvenme).
+16. **TikTok actor'leri:** pinli gönderiyi hariç tutma bayrağı yetmedi (828 gönderide 4 pinli, uç değerli): yerelde yeniden süz. Pay-per-event: tarih ve popülerlik filtresi ayrı ücretli olay. Transkript seçenekleri şarkı sözü döndürdü ve transkript bağlantısının 17'de 5'i 404'tü (ücretli, veri yok): varsayılan "indirme/transkript yok" kalsın. Alan var ama dolu değil (yapay zekâ açıklaması 0/20).
+17. **X/Twitter actor'ü:** girdi anahtarı `tweetIDs` (büyük harfli IDs); `maxItems` kimlik sayısına eşit olmalı (fazlası çöp dolgu, azı kesilme). Girdiden bağımsız reklam satırları (`id == -1`) enjekte edilir: istemcide ele.
+18. **Meta Ad Library actor'ü:** sayfa başına ayrı koşu (çoklu URL + tek `count` sonraki sayfaları sahte sıfıra kesti); her sayfa gerçek `total` döndürür, tamlığı onunla denetle. Ticari reklamda harcama/erişim verisi yok (yalnız siyasi/konu reklamlarında). Medya URL'leri imzalı ve yaklaşık 7 günde sona erer. Actor hesapta kiralanmalı, yoksa 401/403.
+19. **Google Trends actor'ü:** trend-listesi modunu kapatan bayrak verilmezse actor anahtar kelimeyi yok sayar ve boş timeline döner. Anahtar kelime başına bir koşu. Konut proxy'si hem güvenilirliği hem maliyeti belirler (datacenter IP'si bir ülkede engellendi). Seviyeler çekim penceresine göreli (0-100): iki çekimin seviyesi karşılaştırılmaz. Düşük hacimli terim düz/sıfır döner.
+
+## Araçlar
+
+`APIFY_TOKEN` (Apify Console → Settings → API & Integrations). İstemci: resmî `apify-client` (Python/JS) ya da ham REST (`https://api.apify.com/v2/...`). Küçük `field()` yardımcısı, maliyet kayıt/bütçe kapısı fonksiyonu ve `--dry-run` bayraklı bir koşu betiği projeye eklenir; bu kit dosya yazmaz.
+
+## Sınırlar
+
+- Bu kit actor çalıştırmanın güvenliğini anlatır; belirli bir actor'ün girdi şemasını ya da güncel fiyatını vermez: Store sayfası esastır.
+- Sync endpoint zaman aşımında run'ın durdurulup durdurulmadığı resmî belgede yok; kendi projende ölç.
+- `maxTotalChargeUsd` limite ulaşılınca davranış yalnız pay-per-event için belgeli; diğer fiyat modellerinde kendi kapını koru.
+- Tuzak tablosundaki olaylar belirli actor sürümlerinde ölçüldü; actor güncellendiyse yeniden ölç. "Ondalık gönderi sayısı" tek ölçüm (n=1).
+- Webhook ayrıntıları (imza, payload şablonu), Apify Proxy ayarları, kendi actor'ünü yayınlama ve Schedules kapsam dışı.

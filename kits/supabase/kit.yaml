@@ -1,0 +1,118 @@
+# supabase — kit manifesti (ADR 0024 / tekan).
+# knowledge kit: projeye dosya yazmaz; SKILL.md agent oturumuna yüklenir. Değişen değerler aşağıda `facts`'te.
+id: supabase
+name: Supabase (backend)
+kind: knowledge
+version: 1.0.0
+summary: "Backend'den Supabase kullanımı: anahtar sızıntısı, JWT doğrulama, RLS, pooler ve migration kayması olmadan."
+
+requires:
+  cli: [supabase, docker]
+  secrets: [SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_JWT_SECRET]
+
+files: []
+
+sources:
+  - { title: "Pricing", url: "https://supabase.com/pricing", kind: pricing }
+  - { title: "Project pausing", url: "https://supabase.com/docs/guides/platform/free-project-pausing", kind: official_docs }
+  - { title: "Connecting to Postgres", url: "https://supabase.com/docs/guides/database/connecting-to-postgres", kind: official_docs }
+  - { title: "JWTs", url: "https://supabase.com/docs/guides/auth/jwts", kind: official_docs }
+  - { title: "JWT claims reference", url: "https://supabase.com/docs/guides/auth/jwt-fields", kind: official_docs }
+  - { title: "API keys", url: "https://supabase.com/docs/guides/api/api-keys", kind: official_docs }
+  - { title: "Row Level Security", url: "https://supabase.com/docs/guides/database/postgres/row-level-security", kind: official_docs }
+  - { title: "Database migrations", url: "https://supabase.com/docs/guides/deployment/database-migrations", kind: official_docs }
+  - { title: "Local development overview", url: "https://supabase.com/docs/guides/local-development/overview", kind: official_docs }
+  - { title: "CLI getting started", url: "https://supabase.com/docs/guides/local-development/cli/getting-started", kind: official_docs }
+  - { title: "Storage buckets", url: "https://supabase.com/docs/guides/storage/buckets/fundamentals", kind: official_docs }
+
+facts:
+  - key: free_plan_limits
+    label: Free plan limits
+    value: "2 active projects, 500 MB database, 1 GB file storage, 50 MB max upload per file"
+    sourceUrl: https://supabase.com/pricing
+    checkedAt: "2026-10-17"
+  - key: pro_plan_price
+    label: Pro plan price
+    value: "from $25/month, includes $10/month compute credits (one Micro instance), 100 GB file storage"
+    sourceUrl: https://supabase.com/pricing
+    checkedAt: "2026-10-17"
+  - key: free_pause_rule
+    label: Free plan inactivity pausing
+    value: "Paused after low activity over a 7-day window (pricing page: 1 week of inactivity); a few daily database requests are typically enough to avoid it; Pro is not paused"
+    sourceUrl: https://supabase.com/docs/guides/platform/free-project-pausing
+    checkedAt: "2026-10-17"
+  - key: pause_restore_window
+    label: Restore window for a paused Free project
+    value: "Up to 1 year (page body; the section anchor still says 90-day-window and an older changelog says 90 days)"
+    sourceUrl: https://supabase.com/docs/guides/platform/free-project-pausing
+    checkedAt: "2026-10-17"
+  - key: pooler_ports
+    label: Connection endpoints and ports
+    value: "Direct db.<ref>.supabase.co:5432 (IPv6; IPv4 needs add-on); shared pooler aws-<n>-<region>.pooler.supabase.com session mode :5432, transaction mode :6543 (IPv4 on all plans)"
+    sourceUrl: https://supabase.com/docs/guides/database/connecting-to-postgres
+    checkedAt: "2026-10-17"
+  - key: pooler_username
+    label: Pooler username format
+    value: "Shared pooler: postgres.<project-ref>; custom role: <role>.<project-ref>"
+    sourceUrl: https://supabase.com/docs/guides/database/connecting-to-postgres
+    checkedAt: "2026-10-17"
+  - key: transaction_mode_prepared
+    label: Prepared statements in transaction mode
+    value: "Not supported; turn off in the driver (asyncpg: statement_cache_size=0, Postgres.js/Drizzle: prepare=false, Prisma: pgbouncer=true, JDBC: prepareThreshold=0)"
+    sourceUrl: https://supabase.com/docs/guides/database/connecting-to-postgres
+    checkedAt: "2026-10-17"
+  - key: api_key_types
+    label: API key types and where each may live
+    value: "sb_publishable_... safe in client code (anon/authenticated role, RLS applies); sb_secret_... backend only (service_role, BYPASSRLS), blocked in browsers by User-Agent with 401 but that is not a protection; both are short strings, not JWTs"
+    sourceUrl: https://supabase.com/docs/guides/api/api-keys
+    checkedAt: "2026-10-17"
+  - key: legacy_key_deprecation
+    label: Legacy anon / service_role JWT keys
+    value: "Keep working until disabled in the Dashboard; Supabase is deprecating them by the end of 2026 (no exact date given)"
+    sourceUrl: https://supabase.com/docs/guides/api/api-keys
+    checkedAt: "2026-10-17"
+  - key: secret_key_rls_condition
+    label: When the secret key bypasses RLS
+    value: "Only when the request carries no user access token"
+    sourceUrl: https://supabase.com/docs/guides/database/postgres/row-level-security
+    checkedAt: "2026-10-17"
+  - key: jwks_endpoint
+    label: JWKS endpoint
+    value: "GET https://<project>.supabase.co/auth/v1/.well-known/jwks.json; returns no keys unless asymmetric signing keys are in use; cached at the Supabase Edge for 10 minutes (wait at least 20 minutes after creating or revoking a signing key)"
+    sourceUrl: https://supabase.com/docs/guides/auth/jwts
+    checkedAt: "2026-10-17"
+  - key: hs256_verification_guidance
+    label: Official guidance for HS256 (shared secret) tokens
+    value: "Verify via the Auth server (GET /auth/v1/user with apikey + Bearer token); docs strongly advise against verifying HS256 locally with the secret; use JWKS with a remote-JWKS-capable library for asymmetric keys"
+    sourceUrl: https://supabase.com/docs/guides/auth/jwts
+    checkedAt: "2026-10-17"
+  - key: user_jwt_audience
+    label: aud claim of authenticated user tokens
+    value: "authenticated"
+    sourceUrl: https://supabase.com/docs/guides/auth/jwt-fields
+    checkedAt: "2026-10-17"
+  - key: metadata_authorization
+    label: user_metadata vs app_metadata
+    value: "raw_user_meta_data can be updated by the user (not for authorization); raw_app_meta_data cannot be updated by the user (use for authorization data)"
+    sourceUrl: https://supabase.com/docs/guides/database/postgres/row-level-security
+    checkedAt: "2026-10-17"
+  - key: view_rls_behavior
+    label: Views and RLS
+    value: "Views bypass RLS by default (created by postgres); on Postgres 15+ set security_invoker = true so underlying table RLS applies"
+    sourceUrl: https://supabase.com/docs/guides/database/postgres/row-level-security
+    checkedAt: "2026-10-17"
+  - key: migration_tracking
+    label: Remote migration tracking
+    value: "Applied migrations recorded in supabase_migrations.schema_migrations; SQL Editor / Table Editor changes bypass history and make db push fail; fix with supabase db pull; migration repair edits only the tracking table"
+    sourceUrl: https://supabase.com/docs/guides/deployment/database-migrations
+    checkedAt: "2026-10-17"
+  - key: local_stack_defaults
+    label: Local stack defaults (Supabase CLI)
+    value: "API http://localhost:54321, Postgres postgresql://postgres:postgres@localhost:54322/postgres, Studio :54323, Mailpit :54324; supabase start prints local publishable and secret keys; db reset applies migrations then supabase/seed.sql"
+    sourceUrl: https://supabase.com/docs/guides/local-development/cli/getting-started
+    checkedAt: "2026-10-17"
+  - key: storage_bucket_access
+    label: Storage bucket access model
+    value: "Buckets are private by default (RLS on storage.objects applies to every operation); public buckets bypass access control for reads only; private reads via JWT download or createSignedUrl"
+    sourceUrl: https://supabase.com/docs/guides/storage/buckets/fundamentals
+    checkedAt: "2026-10-17"

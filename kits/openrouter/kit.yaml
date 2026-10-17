@@ -1,0 +1,123 @@
+# openrouter — kit manifesti (ADR 0024 / tekan).
+# knowledge kit: projeye dosya yazmaz; SKILL.md agent oturumuna yüklenir. Değişen değerler aşağıda `facts`'te.
+id: openrouter
+name: OpenRouter (LLM çağrıları, para kontrolü)
+kind: knowledge
+version: 1.0.0
+summary: OpenRouter ile LLM çağrılarını sessizce fazla harcamadan ve sessizce bozulmadan yapma yöntemi.
+
+requires:
+  cli: []
+  secrets: [OPENROUTER_API_KEY]
+
+files: []
+
+sources:
+  - { title: "Usage accounting", url: "https://openrouter.ai/docs/cookbook/administration/usage-accounting", kind: official_docs }
+  - { title: "Get a generation", url: "https://openrouter.ai/docs/api-reference/get-a-generation", kind: official_docs }
+  - { title: "Model fallbacks", url: "https://openrouter.ai/docs/guides/routing/model-fallbacks", kind: official_docs }
+  - { title: "Limits (credit, budget, rate limits)", url: "https://openrouter.ai/docs/api-reference/limits", kind: official_docs }
+  - { title: "Structured outputs", url: "https://openrouter.ai/docs/guides/features/structured-outputs", kind: official_docs }
+  - { title: "Response healing", url: "https://openrouter.ai/docs/guides/features/response-healing", kind: official_docs }
+  - { title: "Provider routing", url: "https://openrouter.ai/docs/guides/routing/provider-selection", kind: official_docs }
+  - { title: "Reasoning tokens", url: "https://openrouter.ai/docs/guides/best-practices/reasoning-tokens", kind: official_docs }
+  - { title: "Models API (list models, pricing overrides)", url: "https://openrouter.ai/docs/api-reference/models/get-models", kind: official_docs }
+  - { title: "Pricing and plans", url: "https://openrouter.ai/pricing", kind: pricing }
+  - { title: "FAQ (pricing and fees)", url: "https://openrouter.ai/docs/faq", kind: official_docs }
+
+facts:
+  - key: cost_in_response
+    label: Per-request cost in the completion response
+    value: "usage.cost is returned on every response with no parameter; usage:{include:true} and stream_options.include_usage are deprecated and have no effect"
+    sourceUrl: https://openrouter.ai/docs/cookbook/administration/usage-accounting
+    checkedAt: "2026-10-17"
+  - key: generation_endpoint
+    label: Cost lookup by generation id
+    value: "GET /api/v1/generation?id=<id> returns total_cost and native_tokens_* counts; cost_details.upstream_inference_cost is only filled for BYOK requests"
+    sourceUrl: https://openrouter.ai/docs/api-reference/get-a-generation
+    checkedAt: "2026-10-17"
+  - key: models_fallback_param
+    label: Model fallback list
+    value: "Request field `models` (array, priority order); any error can trigger the next model (context length, moderation, rate limit, downtime); billed at the model that answered (response `model`)"
+    sourceUrl: https://openrouter.ai/docs/guides/routing/model-fallbacks
+    checkedAt: "2026-10-17"
+  - key: failed_attempts_billing
+    label: Billing of errored or fallback attempts
+    value: "An attempt that errors is not charged for its model tokens; with fallback you pay only for the run that answers. A successful 200 response whose content you reject is billed"
+    sourceUrl: https://openrouter.ai/pricing
+    checkedAt: "2026-10-17"
+  - key: free_model_limits
+    label: Free model variants (id ending in :free) rate limits
+    value: "20 requests/minute; 50 requests/day if less than 10 credits purchased all-time, 1000 requests/day at 10 or more"
+    sourceUrl: https://openrouter.ai/docs/api-reference/limits
+    checkedAt: "2026-10-17"
+  - key: paid_rate_limit
+    label: Platform rate limit on paid models
+    value: "No platform-level request cap on paid variants; 429 can still come from the upstream provider (error.metadata.provider_code); successful responses carry no X-RateLimit-* headers"
+    sourceUrl: https://openrouter.ai/docs/api-reference/limits
+    checkedAt: "2026-10-17"
+  - key: retry_after
+    label: 429 handling guidance
+    value: "Retry with exponential backoff and honor the Retry-After header when present (set when every attempted provider returned a hint)"
+    sourceUrl: https://openrouter.ai/docs/api-reference/limits
+    checkedAt: "2026-10-17"
+  - key: key_endpoint
+    label: Key status endpoint
+    value: "GET /api/v1/key returns limit, limit_remaining, limit_reset, usage_daily/weekly/monthly (UTC windows), budgets[] and effective_budget.remaining_usd"
+    sourceUrl: https://openrouter.ai/docs/api-reference/limits
+    checkedAt: "2026-10-17"
+  - key: per_key_credit_limit
+    label: Server-side spend brake per API key
+    value: "Optional per-key credit limit with reset interval; a budget-blocked request fails with 403 (metadata.limit_source, resets_at, no Retry-After); windows reset at 00:00 UTC (daily), Monday (weekly), 1st (monthly)"
+    sourceUrl: https://openrouter.ai/docs/api-reference/limits
+    checkedAt: "2026-10-17"
+  - key: error_402_cases
+    label: 402 Payment Required cases
+    value: "Branch on error.metadata.limit_source: openrouter_in_flight_budget (transient, honor Retry-After), openrouter_key_limit (key cap spent), openrouter_credits (balance or single request too expensive; retry will not help)"
+    sourceUrl: https://openrouter.ai/docs/api-reference/limits
+    checkedAt: "2026-10-17"
+  - key: in_flight_estimate
+    label: In-flight spending budget estimate
+    value: "Each paid request is estimated up front as input tokens plus completion tokens allowed by max_tokens (a fixed per-request cap when max_tokens is unset); a request that does not fit is rejected with 402 even with positive balance"
+    sourceUrl: https://openrouter.ai/docs/api-reference/limits
+    checkedAt: "2026-10-17"
+  - key: reasoning_tokens_billing
+    label: Reasoning tokens
+    value: "Billed as output tokens; on most providers they count against max_tokens, so a small limit can return finish_reason length with empty content; exclude:true hides them but they are still billed"
+    sourceUrl: https://openrouter.ai/docs/guides/best-practices/reasoning-tokens
+    checkedAt: "2026-10-17"
+  - key: structured_output_support
+    label: Structured outputs support
+    value: "response_format type json_schema; support is per endpoint (provider), not per model; strict:true enforcement varies by provider; require_parameters:true routes only to endpoints supporting all request parameters"
+    sourceUrl: https://openrouter.ai/docs/guides/features/structured-outputs
+    checkedAt: "2026-10-17"
+  - key: unsupported_param_ignored
+    label: Default behavior for unsupported parameters
+    value: "With require_parameters:false (default) a provider that lacks a parameter receives the request and ignores it; if no provider of the model supports response_format, the request is still routed and response_format is ignored"
+    sourceUrl: https://openrouter.ai/docs/guides/routing/provider-selection
+    checkedAt: "2026-10-17"
+  - key: response_healing_limits
+    label: Response healing plugin limits
+    value: "plugins:[{id:response-healing}]; non-streaming requests only; cannot repair JSON truncated by max_tokens"
+    sourceUrl: https://openrouter.ai/docs/guides/features/response-healing
+    checkedAt: "2026-10-17"
+  - key: provider_fallback_default
+    label: Provider fallback inside one model id
+    value: "allow_fallbacks defaults to true (other providers may serve the same model id); set provider.allow_fallbacks:false with provider.order to pin; provider.max_price caps $/M token price per request"
+    sourceUrl: https://openrouter.ai/docs/guides/routing/provider-selection
+    checkedAt: "2026-10-17"
+  - key: pricing_overrides
+    label: Conditional pricing in the models catalog
+    value: "pricing.overrides[] may apply long-context (min_prompt_tokens) or UTC time-window rates; top-level pricing keys reflect default conditions only"
+    sourceUrl: https://openrouter.ai/docs/api-reference/models/get-models
+    checkedAt: "2026-10-17"
+  - key: catalog_fields
+    label: Models catalog fields for lifecycle
+    value: "GET /api/v1/models (no auth) lists alias_target (set on aliases such as ~vendor/model-latest), canonical_slug (versioned id), expiration_date (ISO date or null), supported_parameters"
+    sourceUrl: https://openrouter.ai/docs/api-reference/models/get-models
+    checkedAt: "2026-10-17"
+  - key: credit_purchase_fee
+    label: OpenRouter fee on credit purchases (no markup on inference)
+    value: "5.5% on Standard, 8% on Business, charged at credit purchase, never per request"
+    sourceUrl: https://openrouter.ai/pricing
+    checkedAt: "2026-10-17"

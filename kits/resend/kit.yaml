@@ -1,0 +1,90 @@
+# resend — kit manifesti (ADR 0024 / tekan).
+# knowledge kit: projeye dosya yazmaz; SKILL.md agent oturumuna yüklenir. Değişen değerler aşağıda `facts`'te.
+id: resend
+name: Resend (işlem e-postası)
+kind: knowledge
+version: 1.0.0
+summary: Resend ile işlem e-postasını (giriş kodu, doğrulama, davet) gerçekten ulaştırma; yerelden asla gerçek posta göndermeme yöntemi.
+
+requires:
+  cli: []
+  secrets: [RESEND_API_KEY, EMAIL_FROM]
+
+files: []
+
+sources:
+  - { title: "Add and verify a domain", url: "https://resend.com/docs/add-a-domain", kind: official_docs }
+  - { title: "Verified domains", url: "https://resend.com/docs/dashboard/domains/introduction", kind: official_docs }
+  - { title: "Implementing DMARC", url: "https://resend.com/docs/dashboard/domains/dmarc", kind: official_docs }
+  - { title: "Usage limits (rate limits and quotas)", url: "https://resend.com/docs/api-reference/rate-limit", kind: official_docs }
+  - { title: "Account quotas and limits", url: "https://resend.com/docs/knowledge-base/resend-sending-limits", kind: official_docs }
+  - { title: "Idempotency keys", url: "https://resend.com/docs/dashboard/emails/idempotency-keys", kind: official_docs }
+  - { title: "Send test emails", url: "https://resend.com/docs/dashboard/emails/send-test-emails", kind: official_docs }
+  - { title: "403 error using resend.dev domain", url: "https://resend.com/docs/knowledge-base/403-error-resend-dev-domain", kind: official_docs }
+  - { title: "API errors", url: "https://resend.com/docs/api-reference/errors", kind: official_docs }
+  - { title: "Email suppressions", url: "https://resend.com/docs/dashboard/emails/email-suppressions", kind: official_docs }
+  - { title: "Send emails with SMTP", url: "https://resend.com/docs/send-with-smtp", kind: official_docs }
+  - { title: "Pricing", url: "https://resend.com/pricing", kind: pricing }
+  - { title: "Mailpit SMTP configuration", url: "https://mailpit.axllent.org/docs/configuration/smtp/", kind: official_docs }
+
+facts:
+  - key: free_plan_quota
+    label: Free plan transactional quota (sent and received count; each To/CC/BCC recipient counts separately)
+    value: "100 emails/day, 3,000 emails/month"
+    sourceUrl: https://resend.com/docs/knowledge-base/resend-sending-limits
+    checkedAt: "2026-10-17"
+  - key: daily_quota_reset
+    label: Free plan daily quota window
+    value: "UTC calendar day, resets at 00:00 UTC (not a rolling 24 hours); paid plans have no daily quota"
+    sourceUrl: https://resend.com/docs/api-reference/rate-limit
+    checkedAt: "2026-10-17"
+  - key: api_rate_limit
+    label: Default API rate limit
+    value: "10 requests/second per team (shared by all API keys, same on every plan); excess gets 429; no burst allowance"
+    sourceUrl: https://resend.com/docs/knowledge-base/resend-sending-limits
+    checkedAt: "2026-10-17"
+  - key: quota_error_types
+    label: 429 error types when quota is exhausted
+    value: "daily_quota_exceeded, monthly_quota_exceeded"
+    sourceUrl: https://resend.com/docs/api-reference/rate-limit
+    checkedAt: "2026-10-17"
+  - key: batch_send_size
+    label: Batch send size (one batch request counts as one request against the rate limit)
+    value: "up to 100 emails per request"
+    sourceUrl: https://resend.com/pricing
+    checkedAt: "2026-10-17"
+  - key: free_plan_domains
+    label: Verified custom domains on Free (Pro 10, Scale 1,000)
+    value: "3"
+    sourceUrl: https://resend.com/pricing
+    checkedAt: "2026-10-17"
+  - key: idempotency_key
+    label: Idempotency key rules
+    value: "Idempotency-Key header (SMTP: Resend-Idempotency-Key), 1-256 chars, remembered 24 hours; 409 invalid_idempotent_request if payload differs, 409 concurrent_idempotent_requests if in flight"
+    sourceUrl: https://resend.com/docs/dashboard/emails/idempotency-keys
+    checkedAt: "2026-10-17"
+  - key: sandbox_sender
+    label: Default onboarding sender restriction
+    value: "from onboarding@resend.dev can only send to the email address of your own Resend account; other recipients get 403"
+    sourceUrl: https://resend.com/docs/knowledge-base/403-error-resend-dev-domain
+    checkedAt: "2026-10-17"
+  - key: test_addresses
+    label: Resend test recipient addresses (still call the API and count against quota; support +label)
+    value: "delivered@resend.dev, bounced@resend.dev, complained@resend.dev, suppressed@resend.dev (no label support)"
+    sourceUrl: https://resend.com/docs/dashboard/emails/send-test-emails
+    checkedAt: "2026-10-17"
+  - key: dns_verification_time
+    label: Domain DNS verification time
+    value: "usually within 15 minutes, up to 72 hours; DNS records must match exactly what Resend generated; CNAME must not be proxied"
+    sourceUrl: https://resend.com/docs/add-a-domain
+    checkedAt: "2026-10-17"
+  - key: smtp_relay
+    label: Resend SMTP relay
+    value: "host smtp.resend.com, username resend, password = API key; ports 465/2465 (implicit TLS), 25/587/2587 (STARTTLS)"
+    sourceUrl: https://resend.com/docs/send-with-smtp
+    checkedAt: "2026-10-17"
+  - key: mailpit_default_ports
+    label: Mailpit default SMTP port
+    value: "1025, no encryption and no authentication by default"
+    sourceUrl: https://mailpit.axllent.org/docs/configuration/smtp/
+    checkedAt: "2026-10-17"

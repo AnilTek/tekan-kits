@@ -1,0 +1,4 @@
+-- Küçük, elle yazılmış örnek veri (gerçek kişi ya da prod verisi değil). db-reset boş veritabanına uygular.
+-- Şemayı migration'lar kurar; burada tablo oluşturulmaz. Yeni tablo örnek veri istiyorsa INSERT'i buraya, işle aynı PR'da ekle.
+-- Örnek:
+-- INSERT INTO products (name, price_cents) VALUES ('Örnek ürün', 1000);

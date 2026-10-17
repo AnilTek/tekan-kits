@@ -1,0 +1,89 @@
+# google-trends — kit manifesti (ADR 0024 / tekan).
+# knowledge kit: projeye dosya yazmaz; SKILL.md agent oturumuna yüklenir. Değişen değerler aşağıda `facts`'te.
+id: google-trends
+name: Google Trends
+kind: knowledge
+version: 1.0.0
+summary: "Google Trends verisini pipeline'a güvenilir ve karşılaştırılabilir almanın yöntemi: 0-100 indeksi, örnekleme, kaynak seçimi."
+
+requires:
+  cli: []
+  secrets: [APIFY_TOKEN]
+
+files: []
+
+sources:
+  - { title: "Google Trends API (alpha)", url: "https://developers.google.com/search/apis/trends", kind: official_docs }
+  - { title: "Introducing the Google Trends API (alpha)", url: "https://developers.google.com/search/blog/2025/07/trends-api", kind: official_docs }
+  - { title: "FAQ about Google Trends data", url: "https://support.google.com/trends/answer/4365533", kind: official_docs }
+  - { title: "Compare Trends search terms", url: "https://support.google.com/trends/answer/4359550", kind: official_docs }
+  - { title: "Understanding Trends data: top and rising queries", url: "https://support.google.com/trends/answer/4355000", kind: official_docs }
+  - { title: "Google Trends Scraper (Apify, official actor)", url: "https://apify.com/apify/google-trends-scraper", kind: pricing }
+  - { title: "Google Trends Fast Scraper (Apify)", url: "https://apify.com/data_xplorer/google-trends-fast-scraper", kind: pricing }
+
+facts:
+  - key: trends_api_status
+    label: Google Trends API durumu
+    value: "Alpha; yalnız seçilmiş test kullanıcılarına açık, başvuru formuyla giriliyor; fiyat ve genel erişim tarihi yayımlanmamış"
+    sourceUrl: https://developers.google.com/search/apis/trends
+    checkedAt: "2026-10-17"
+  - key: trends_api_range
+    label: Trends API veri aralığı ve toplulaştırma
+    value: "Kayan 1800 gün (~5 yıl); günlük, haftalık, aylık, yıllık toplulaştırma; bölge ve alt-bölge kısıtı"
+    sourceUrl: https://developers.google.com/search/blog/2025/07/trends-api
+    checkedAt: "2026-10-17"
+  - key: trends_api_scaling
+    label: Trends API ölçeklemesi
+    value: "0-100 DEĞİL; isteklerden bağımsız tutarlı ölçek (istekler birleştirilip karşılaştırılabilir); yine de mutlak sayı değil, arama ilgisi"
+    sourceUrl: https://developers.google.com/search/blog/2025/07/trends-api
+    checkedAt: "2026-10-17"
+  - key: web_scaling
+    label: Trends web sitesinin ölçeklemesi
+    value: "Her istekte yeniden 0-100'e ölçeklenir; her nokta, temsil ettiği coğrafya ve zaman aralığındaki toplam aramaya bölünür"
+    sourceUrl: https://support.google.com/trends/answer/4365533
+    checkedAt: "2026-10-17"
+  - key: low_volume_zero
+    label: Düşük hacimli terimler
+    value: "Az kişinin yaptığı aramalar gösterilmez; düşük hacimli terimler \"0\" görünür"
+    sourceUrl: https://support.google.com/trends/answer/4365533
+    checkedAt: "2026-10-17"
+  - key: sampling_noise
+    label: Örnekleme ve gürültü
+    value: "Aramaların yalnız bir örneği kullanılır; gizlilik için istatistiksel gürültü eklenir, en çok düşük ilgili sorgularda görünür"
+    sourceUrl: https://support.google.com/trends/answer/4365533
+    checkedAt: "2026-10-17"
+  - key: explore_compare_limit
+    label: Explore'da aynı anda karşılaştırma sınırı
+    value: "En fazla 8 grup x grup başına 50 terim (klasik Explore: 5 grup x 25 terim)"
+    sourceUrl: https://support.google.com/trends/answer/4359550
+    checkedAt: "2026-10-17"
+  - key: breakout_threshold
+    label: Rising sorgularda "Breakout"
+    value: "Büyüme %5000'i aşınca sayı yerine Breakout yazılır; diğer rising sorgular önceki karşılaştırılabilir döneme göre yüzde artış gösterir"
+    sourceUrl: https://support.google.com/trends/answer/4355000
+    checkedAt: "2026-10-17"
+  - key: apify_official_actor_price
+    label: Resmî Apify actor'ü (google-trends-scraper) fiyatı
+    value: "Olay başına + platform kullanımı; sayfada \"from $0.30 / 1,000 results\" (abonelik planına göre iner)"
+    sourceUrl: https://apify.com/apify/google-trends-scraper
+    checkedAt: "2026-10-17"
+  - key: apify_official_actor_outputs
+    label: Resmî actor'ün çıktı alanları ve geo davranışı
+    value: "interestOverTime_timelineData, relatedQueries_top, relatedQueries_rising, relatedTopics_top; geo verilmezse bölge verisi interestBy olarak gelir; sayfada \"Google Trends does not offer an official API\" yazıyor"
+    sourceUrl: https://apify.com/apify/google-trends-scraper
+    checkedAt: "2026-10-17"
+  - key: apify_fast_actor_price
+    label: Fast actor (google-trends-fast-scraper) fiyatı
+    value: "Olay başına sabit fiyat; sayfada \"from $0.50 / 1,000 results\""
+    sourceUrl: https://apify.com/data_xplorer/google-trends-fast-scraper
+    checkedAt: "2026-10-17"
+  - key: apify_fast_actor_modes
+    label: Fast actor girdi kipleri
+    value: "mode = keyword | trending (VARSAYILAN trending); trendingSearchesTimeframe 4/24/48/168 saat; trendingSearchesMaxItems 1-1000; fetchRegionalData ülke ister; eski enableTrendingSearches bayrağı mode'u ezer (true = trending)"
+    sourceUrl: https://apify.com/data_xplorer/google-trends-fast-scraper
+    checkedAt: "2026-10-17"
+  - key: trending_rss_items
+    label: Google trend listesi RSS beslemesi (geo parametreli)
+    value: "Besleme başına 10 madde (geo=US ile 2026-10-17'de sayıldı)"
+    sourceUrl: https://trends.google.com/trending/rss?geo=US
+    checkedAt: "2026-10-17"

@@ -1,0 +1,83 @@
+# elevenlabs — kit manifesti (ADR 0024 / tekan).
+# knowledge kit: projeye dosya yazmaz; SKILL.md agent oturumuna yüklenir. Değişen değerler aşağıda `facts`'te.
+id: elevenlabs
+name: ElevenLabs STT / TTS
+kind: knowledge
+version: 1.0.0
+summary: ElevenLabs Scribe (STT) ve TTS'yi iki kez ödemeden ve çıktıyı kaybetmeden kullanma yöntemi.
+
+requires:
+  cli: []
+  secrets: [ELEVENLABS_API_KEY]
+
+files: []
+
+sources:
+  - { title: "Speech to Text: Create transcript (API reference)", url: "https://elevenlabs.io/docs/api-reference/speech-to-text/convert", kind: official_docs }
+  - { title: "Speech to Text: Get transcript (API reference)", url: "https://elevenlabs.io/docs/api-reference/speech-to-text/get", kind: official_docs }
+  - { title: "Speech to Text capability overview (FAQ, limits, diarization)", url: "https://elevenlabs.io/docs/overview/capabilities/speech-to-text", kind: official_docs }
+  - { title: "Models (model IDs, TTS character limits)", url: "https://elevenlabs.io/docs/overview/models", kind: official_docs }
+  - { title: "API pricing", url: "https://elevenlabs.io/pricing/api", kind: pricing }
+  - { title: "Changelog", url: "https://elevenlabs.io/docs/changelog", kind: changelog }
+
+facts:
+  - key: stt_price_per_hour
+    label: Scribe v2 batch speech-to-text price (billed per hour of audio sent)
+    value: "$0.22/hour (Scribe v2 and v2 Medical); Scribe v2 Realtime $0.39/hour"
+    sourceUrl: https://elevenlabs.io/pricing/api
+    checkedAt: "2026-10-17"
+  - key: stt_addon_prices
+    label: Speech-to-text add-ons that are billed on top of the hourly rate
+    value: "Keyterm prompting $0.05/hour, transcript editing $0.07/hour (Scribe v2)"
+    sourceUrl: https://elevenlabs.io/pricing/api
+    checkedAt: "2026-10-17"
+  - key: api_billing_unit
+    label: API billing unit
+    value: "API usage is billed in US dollars, not credits; subscription plans still list included hours/characters"
+    sourceUrl: https://elevenlabs.io/pricing/api
+    checkedAt: "2026-10-17"
+  - key: stt_file_limits
+    label: Speech-to-text file size and duration limits
+    value: "FAQ: up to 3 GB, up to 10 hours (standard mode); API reference for `file` says < 5.0 GB; minimum 100 ms audio"
+    sourceUrl: https://elevenlabs.io/docs/overview/capabilities/speech-to-text
+    checkedAt: "2026-10-17"
+  - key: stt_source_url
+    label: Remote input parameters
+    value: "`source_url` takes hosted audio/video, YouTube and TikTok URLs; `cloud_storage_url` is deprecated (HTTPS file < 2 GB)"
+    sourceUrl: https://elevenlabs.io/docs/api-reference/speech-to-text/convert
+    checkedAt: "2026-10-17"
+  - key: stt_models
+    label: Speech-to-text model IDs
+    value: "scribe_v2 (batch), scribe_v2_realtime, scribe_v2_medical; scribe_v1 is listed as outclassed by v2 models"
+    sourceUrl: https://elevenlabs.io/docs/overview/models
+    checkedAt: "2026-10-17"
+  - key: stt_diarization_timestamps
+    label: Diarization and timestamp parameters
+    value: "`diarize`; `num_speakers` max 32; `timestamps_granularity` = word | character; `words[]` carries start, end, type, speaker_id"
+    sourceUrl: https://elevenlabs.io/docs/api-reference/speech-to-text/convert
+    checkedAt: "2026-10-17"
+  - key: stt_get_transcript
+    label: Re-fetching a paid transcript by id
+    value: "GET /v1/speech-to-text/transcripts/{transcription_id}; response has audio_duration_secs and transcription_id"
+    sourceUrl: https://elevenlabs.io/docs/api-reference/speech-to-text/get
+    checkedAt: "2026-10-17"
+  - key: stt_zero_retention
+    label: Zero retention mode (enable_logging=false)
+    value: "Enterprise only; transcript storage is unavailable for that request"
+    sourceUrl: https://elevenlabs.io/docs/api-reference/speech-to-text/convert
+    checkedAt: "2026-10-17"
+  - key: stt_webhook
+    label: Asynchronous mode
+    value: "`webhook=true` returns early without the transcript; result goes to webhooks configured in workspace settings (optional `webhook_id`)"
+    sourceUrl: https://elevenlabs.io/docs/api-reference/speech-to-text/convert
+    checkedAt: "2026-10-17"
+  - key: tts_price_per_1k_chars
+    label: Text-to-speech price (billed per character)
+    value: "$0.08 per 1K characters (v4, v3, v2 Multilingual); $0.04 (v4 Turbo, v3 Conversational, Flash/Turbo)"
+    sourceUrl: https://elevenlabs.io/pricing/api
+    checkedAt: "2026-10-17"
+  - key: tts_character_limits
+    label: Maximum characters per text-to-speech request
+    value: "eleven_v4 10,000; eleven_v3 5,000; eleven_multilingual_v2 10,000; eleven_flash_v2_5 40,000; eleven_flash_v2 30,000"
+    sourceUrl: https://elevenlabs.io/docs/overview/models
+    checkedAt: "2026-10-17"

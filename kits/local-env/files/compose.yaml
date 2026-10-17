@@ -1,0 +1,38 @@
+# Yerel ortam: Postgres ve dış servis mock'ları. Kaynak: tekan-kits/local-env (seed; sonrası projenin malı).
+# Değerler .env'den gelir (make env-up .env.example'ı .env'e kopyalar).
+# - Host portu başka projelerle çakışmamalı; seçim yöntemi kit'in SKILL.md "Yöntem" bölümünde.
+# - Portlar yalnız 127.0.0.1'e bağlanır: yerel şifre ağa açılmaz.
+# - Her dış servis için aşağıya ayrı bir mock servisi eklenir; .env.example'daki <SERVICE>_BASE_URL onun portunu gösterir
+#   (assets/scripts/env-check.sh bu eşleşmeyi CI'da denetler).
+name: {{PROJECT_NAME}} # küçük harf, rakam, tire ve alt çizgi; açık ad, paralel projelerde konteyner/ağ/birim adları çakışmasın
+
+services:
+  postgres:
+    # Prod'la aynı MAJOR sürüm; `latest` yok.
+    image: "postgres:<PLACEHOLDER: prod Postgres major sürümü>"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER tanımlı değil, make env-up çalıştır}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD tanımlı değil, make env-up çalıştır}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB tanımlı değil, make env-up çalıştır}
+    ports:
+      - "127.0.0.1:${PG_PORT:?PG_PORT tanımlı değil, make env-up çalıştır}:5432"
+    volumes:
+      # Adlandırılmış birim: `down` veriyi korur, `down -v` siler (db-reset bunu kullanır).
+      # Bağlama yolu major'a göre değişir: kit.yaml facts -> postgres_volume_path.
+      - "pgdata:<PLACEHOLDER: Postgres veri yolu, kit.yaml facts postgres_volume_path>"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  # Dış servis mock'u örneği (SMTP için Mailpit). Gerekirse yorumu kaldır; .env.example'a
+  # MAILPIT_BASE_URL=http://localhost:<MAILPIT_WEB_PORT> ekle. Portlar kit.yaml facts -> mailpit_ports.
+  # mailpit:
+  #   image: axllent/mailpit
+  #   ports:
+  #     - "127.0.0.1:${MAILPIT_WEB_PORT:?tanımlı değil}:8025" # web arayüzü ve API
+  #     - "127.0.0.1:${MAILPIT_SMTP_PORT:?tanımlı değil}:1025" # SMTP
+
+volumes:
+  pgdata:
