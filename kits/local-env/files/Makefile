@@ -1,6 +1,6 @@
 # Yerel ortam sözleşmesi: env-up, env-down, db-reset, dev. Komut adları her projede aynıdır; Tekan ve agent'lar bunları arar.
 # Kaynak: tekan-kits/local-env (seed; sonrası projenin malı). Adları değiştirme; içlerini projenin stack'ine göre doldur.
-.PHONY: env-up env-down db-reset db-migrate db-seed dev
+.PHONY: env-up env-down db-reset db-migrate db-seed dev check
 
 COMPOSE ?= docker compose
 
@@ -32,3 +32,7 @@ db-seed:
 # Geliştirme sunucusu; önce ortamı (Postgres + mock'lar) ayağa kaldırır.
 dev: env-up
 	<PLACEHOLDER: dev sunucusu komutu>
+
+# Sözleşmenin yapısal kontrolü (komut adları, mock'lar, yer tutucular). CI'sız projede asıl kapı budur; PR'dan önce koş.
+check:
+	bash assets/scripts/env-check.sh

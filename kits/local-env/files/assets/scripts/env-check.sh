@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # env-check — yerel ortam sözleşmesinin yapısal kontrolü.
 # İçeriği yargılamaz; yalnızca sözleşmenin bozulmadığını doğrular:
-#   1. compose dosyası ve .env.example var
+#   1. .env.example var; compose dosyası varsa tektir (Docker'sız stack'te compose olmayabilir)
 #   2. env-up / env-down / db-reset / dev komutları tanımlı (Makefile hedefi ya da package.json script'i)
 #   3. Postgres imajı major sürüme sabit (latest / etiketsiz değil) ve veri birimi yolu o major'a uygun
 #   4. her *_BASE_URL için ya yerelde yayımlanan bir mock portu var ya da gerçek olduğu açıkça işaretli
@@ -80,11 +80,12 @@ published_ports() {
 }
 
 # --- 1. Dosyalar ---------------------------------------------------------------
-# Neden: compose ya da .env.example olmadan "make env-up" kullanıcının makinesinde tekrarlanamaz.
+# Neden: .env.example olmadan "make env-up" kullanıcının makinesinde tekrarlanamaz. Compose zorunlu değil: Postgres'siz
+# stack'te (ör. D1/SQLite yerel emülatörü) servisler compose dışında olabilir; o zaman mock'lar `env-check: process` işaretlidir.
 section "dosyalar"
 
 if [ -z "$COMPOSE_FILE" ]; then
-  fail "compose dosyası yok (compose.yaml, compose.yml, docker-compose.yaml ya da docker-compose.yml)"
+  note "compose dosyası yok — servisler compose dışındaysa *_BASE_URL satırlarını '# env-check: process' ile işaretle"
 else
   pass "$COMPOSE_FILE"
   # Neden: ikisi de varsa Compose compose.yaml'ı seçer; eski dosyadaki servisler sessizce yok sayılır.

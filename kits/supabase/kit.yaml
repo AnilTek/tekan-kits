@@ -1,9 +1,9 @@
 # supabase — kit manifesti (ADR 0024 / tekan).
 # knowledge kit: projeye dosya yazmaz; SKILL.md agent oturumuna yüklenir. Değişen değerler aşağıda `facts`'te.
 id: supabase
-name: Supabase (backend)
+name: Supabase backend
 kind: knowledge
-version: 1.0.0
+version: 1.0.1
 summary: "Backend'den Supabase kullanımı: anahtar sızıntısı, JWT doğrulama, RLS, pooler ve migration kayması olmadan."
 
 requires:

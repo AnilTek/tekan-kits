@@ -6,8 +6,8 @@
 id: local-env
 name: Local environment
 kind: setup
-version: 1.0.0
-summary: "Yerel ortam sözleşmesi: Docker Postgres, migration'dan şema, seed, tek komutla db-reset, mock'lar ve CI denetimi."
+version: 2.0.0
+summary: "Yerel ortam sözleşmesi: env-up, env-down, db-reset, dev, check; mock'lar; Postgres şablonu, başka stack'e uyarlanır."
 
 requires:
   cli: [docker, git]
@@ -15,18 +15,18 @@ requires:
 
 files:
   - { path: assets/scripts/env-check.sh, mode: managed }
-  - { path: .github/workflows/env-check.yml, mode: managed }
   - { path: compose.yaml, mode: seed }
   - { path: Makefile, mode: seed }
   - { path: .env.example, mode: seed }
   - { path: db/seed.sql, mode: seed }
-  - { path: .github/workflows/db-reset.yml, mode: seed }
 
 # Dosyada bu satırlar yoksa sona eklenir; var olan satırlara dokunulmaz.
 ensure_lines:
   .gitignore:
     - ".env"
     - ".local/snapshots/"
+
+# CI workflow'ları kopyalanmaz: `optional/.github/workflows/` (SKILL.md "Yöntem" adım 9; yalnız proje CI kullanıyorsa).
 
 # Kopyadan sonra agent turu: SKILL.md "Yöntem" bölümü, adım 3.
 agent_step: fill_placeholders

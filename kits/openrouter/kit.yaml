@@ -1,9 +1,9 @@
 # openrouter — kit manifesti (ADR 0024 / tekan).
 # knowledge kit: projeye dosya yazmaz; SKILL.md agent oturumuna yüklenir. Değişen değerler aşağıda `facts`'te.
 id: openrouter
-name: OpenRouter (LLM çağrıları, para kontrolü)
+name: OpenRouter LLM calls
 kind: knowledge
-version: 1.0.0
+version: 1.0.1
 summary: OpenRouter ile LLM çağrılarını sessizce fazla harcamadan ve sessizce bozulmadan yapma yöntemi.
 
 requires:
