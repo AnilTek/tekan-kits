@@ -1,0 +1,71 @@
+# consciouslab-hermes — kit manifesti (ADR 0024 / tekan).
+# seed: bir kez kopyalanır, sonra projenin malı. Kit'in asıl işi proje dışında (Hermes profil dizini);
+# dosya olarak yalnız kurulum betiği taşır. Değişen değerler `facts`'te.
+id: consciouslab-hermes
+name: Consciouslab Hermes
+kind: setup
+version: 0.1.0
+summary: "Bir Hermes profiline cl-hermes kurulumu: profil başına ayar, anahtar, panel kaydı, etkinleştirme, DM-only /baglan."
+
+requires:
+  cli: [bash, hermes, gh]
+  secrets: []
+
+files:
+  - { path: scripts/cl-hermes-install.sh, mode: seed }
+
+sources:
+  - { title: "cl-hermes README (auth repo)", url: "https://github.com/AnilTek/Consciouslab-Auth/blob/main/clients/hermes/README.md", kind: repo }
+  - { title: "Auth repo: nano-mcp-agents spec (M8-M11, M9b, M15)", url: "https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/intent/nano-mcp-agents.md", kind: repo }
+
+facts:
+  - key: plugin_distribution
+    label: How the cl-hermes plugin is obtained
+    value: "Only as source in the auth repo (clients/hermes/cl_hermes); no release artifact or package is defined. Ask the center when no checkout is available"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/clients/hermes/README.md
+    checkedAt: "2026-10-27"
+  - key: config_keys
+    label: Per-profile config file
+    value: "<profile HOME>/cl-hermes/config.json (chmod 600) with auth_issuer, agent_client_id, key_path (default <HOME>/cl-hermes/agent-key.pem); optional local_sponsor_link. In a multi-profile process the file is required and env CL_* is not used"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/clients/hermes/README.md
+    checkedAt: "2026-10-27"
+  - key: keygen_command
+    label: Key generation
+    value: "python -m cl_hermes keygen --profile-home <profile HOME> ; writes agent-key.pem (0600, never printed, never overwritten) and prints the public JWK (ES256 default)"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/clients/hermes/README.md
+    checkedAt: "2026-10-27"
+  - key: auth_issuer
+    label: Production auth address
+    value: "https://auth.consciouslab.io"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/clients/hermes/README.md
+    checkedAt: "2026-10-27"
+  - key: enable_command
+    label: Enabling the plugin per profile
+    value: "hermes plugins enable cl-hermes (named profile: hermes -p <name> plugins enable cl-hermes); plugins are off by default; allow list is config.yaml plugins.enabled"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/clients/hermes/README.md
+    checkedAt: "2026-10-27"
+  - key: observe_mode
+    label: Telegram observe mode
+    value: "observe_unmentioned_group_messages must be false in the profile's Telegram settings; true sends tagged group messages to a shared session without sender identity"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/intent/nano-mcp-agents.md
+    checkedAt: "2026-10-27"
+  - key: baglan_rules
+    label: /baglan and data questions
+    value: "/baglan works only in DM; data questions work in DM and topic-less groups with a per-person session using the asker's own token; topics, channels and shared sessions get no data; cron and sender-less sessions get no data"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/intent/nano-mcp-agents.md
+    checkedAt: "2026-10-27"
+  - key: profile_trust_boundary
+    label: Profile is the trust boundary
+    value: "Everything a profile knows (memory, history, files, tools) is visible to everyone who can talk to it; customer profiles are separate per customer and have no internal resources; each plugin profile is a separate panel agent"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/intent/nano-mcp-agents.md
+    checkedAt: "2026-10-27"
+  - key: troubleshooting_log
+    label: Diagnostic log line
+    value: "<profile HOME>/logs/agent.log line 'cl_hermes: ret:' (user_id=yok key=var means sender identity was stripped)"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/clients/hermes/README.md
+    checkedAt: "2026-10-27"
+  - key: refresh_window
+    label: Token lifetimes
+    value: "Access token at most 10 minutes (memory only); a link unused for 30 days needs /baglan again; agent removal drops all person links"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/intent/nano-mcp-agents.md
+    checkedAt: "2026-10-27"
