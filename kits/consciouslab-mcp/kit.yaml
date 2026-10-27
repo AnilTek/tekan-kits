@@ -1,0 +1,84 @@
+# consciouslab-mcp — kit manifesti (ADR 0024 / tekan).
+# seed: bir kez kopyalanır, sonra projenin malı. Tekan yalnız {{PROJECT_NAME}} ve {{TODAY}} doldurur;
+# {{APP_NAME}}, {{MCP_RESOURCE}}, {{PORT}} agent turunda doldurulur (SKILL.md "Yöntem", adım 3).
+# Değişen değerler (sürüm, adres, bölge) aşağıda `facts`'te; SKILL.md gövdesine gömülmez.
+id: consciouslab-mcp
+name: Consciouslab MCP
+kind: setup
+version: 0.1.0
+summary: "Python app'ine Consciouslab auth'una bağlı salt okur MCP sunucusu: izinli araçlar, alan ayıklama, uyum testi."
+
+requires:
+  cli: [python3, pip, gcloud, make]
+  secrets: []
+
+files:
+  - { path: mcp_server/__init__.py, mode: seed }
+  - { path: mcp_server/app.py, mode: seed }
+  - { path: mcp_server/tools.py, mode: seed }
+  - { path: mcp_server/db.py, mode: seed }
+  - { path: tests_mcp/conftest.py, mode: seed }
+  - { path: tests_mcp/test_mcp_server.py, mode: seed }
+  - { path: scripts/mcp-conformance.sh, mode: seed }
+  - { path: mcp.mk, mode: seed }
+  - { path: requirements-mcp.txt, mode: seed }
+
+# Kopyadan sonra agent turu: SKILL.md "Yöntem" bölümü, adım 3.
+agent_step: fill_placeholders
+
+sources:
+  - { title: "consciouslab-auth (Python) README", url: "https://github.com/AnilTek/Consciouslab-Auth/blob/main/packages/python/consciouslab-auth/README.md", kind: repo }
+  - { title: "Auth repo: app-model.md (MCP kalıbı, Yeni app bağlama)", url: "https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/canonical/app-model.md", kind: repo }
+  - { title: "Auth repo: infrastructure.md (Nano MCP, Ortak paketler)", url: "https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/canonical/infrastructure.md", kind: repo }
+  - { title: "Auth repo: nano-mcp-agents spec (M1-M4, M9b)", url: "https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/intent/nano-mcp-agents.md", kind: repo }
+  - { title: "Artifact Registry: Python authentication", url: "https://docs.cloud.google.com/artifact-registry/docs/python/authentication", kind: official_docs }
+  - { title: "Artifact Registry: virtual repositories", url: "https://docs.cloud.google.com/artifact-registry/docs/repositories/virtual-repo", kind: official_docs }
+  - { title: "MCP specification: authorization", url: "https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization", kind: official_docs }
+  - { title: "RFC 9728 OAuth Protected Resource Metadata", url: "https://www.rfc-editor.org/rfc/rfc9728", kind: official_docs }
+
+facts:
+  - key: package_version
+    label: consciouslab-auth published version (pin exactly)
+    value: "0.1.0rc1 (first release candidate; Python >= 3.11; extras mcp, fastapi, db)"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/packages/python/consciouslab-auth/README.md
+    checkedAt: "2026-10-27"
+  - key: python_index
+    label: Python install address (single virtual repository)
+    value: "--index-url https://europe-west1-python.pkg.dev/consciouslab-bootstrap/consciouslab-python-all/simple/ ; --extra-index-url is forbidden (dependency confusion)"
+    sourceUrl: https://docs.cloud.google.com/artifact-registry/docs/repositories/virtual-repo
+    checkedAt: "2026-10-27"
+  - key: python_auth
+    label: Python authentication to Artifact Registry
+    value: "keyrings.google-artifactregistry-auth with gcloud application-default credentials; no password files"
+    sourceUrl: https://docs.cloud.google.com/artifact-registry/docs/python/authentication
+    checkedAt: "2026-10-27"
+  - key: mcp_sdk_pin
+    label: MCP SDK pinned by the package extra
+    value: "mcp==2.3.0 (exact pin in the [mcp] extra)"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/packages/python/consciouslab-auth/README.md
+    checkedAt: "2026-10-27"
+  - key: mcp_address_pattern
+    label: MCP address pattern
+    value: "https://mcp.<app>.consciouslab.io/mcp ; it is the auth resource id of the MCP sub-resource and never changes"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/intent/nano-mcp-agents.md
+    checkedAt: "2026-10-27"
+  - key: mcp_service_exposure
+    label: Cloud Run MCP service exposure and database user
+    value: "Public service (invocation check off, no allUsers membership in IaC) doing its own bearer verification; own service account; DB user SELECT-only plus TEMP; min instances 0, max 2"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/canonical/infrastructure.md
+    checkedAt: "2026-10-27"
+  - key: conformance_checks
+    label: Conformance command and checks
+    value: "python -m consciouslab_auth.conformance --mcp <url> --expect-redacted default --issuer-port 0 --env PORT=<p> --start '<cmd>' ; 17 MCP checks; exit 0 only if no FAIL; SKIP is not proof"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/packages/python/consciouslab-auth/README.md
+    checkedAt: "2026-10-27"
+  - key: audience_rule
+    label: Token audience rule
+    value: "aud must equal the MCP address exactly; a second aud value is rejected (ADR 0012); RS256 only, typ at+jwt, exp tolerance 60 s"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/packages/python/consciouslab-auth/README.md
+    checkedAt: "2026-10-27"
+  - key: protected_resource_metadata
+    label: Protected resource metadata document
+    value: "/.well-known/oauth-protected-resource (root and path-suffixed); 401 carries WWW-Authenticate Bearer resource_metadata=<url>"
+    sourceUrl: https://www.rfc-editor.org/rfc/rfc9728
+    checkedAt: "2026-10-27"

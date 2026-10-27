@@ -1,0 +1,87 @@
+# consciouslab-app — kit manifesti (ADR 0024 / tekan).
+# workflow: dosya kopyalamaz; adımlar, kim yapar ve kapılar SKILL.md'dedir. Şema başka kit'e bağlanmayı (uses/needs) tanımlamıyor:
+# consciouslab-mcp ve consciouslab-hermes ile local-env SKILL.md'de kimliğiyle anılır.
+# Değişen değerler (sürümler, adresler, şablon adı) aşağıda `facts`'te.
+id: consciouslab-app
+name: Consciouslab app
+kind: workflow
+version: 0.1.0
+summary: "Yeni ya da taşınan app'i Consciouslab merkezi auth'una bağlama: adımlar, kim yapar, kapılar, uyum testi, panel kaydı."
+
+requires:
+  cli: [gh, git, gcloud, docker]
+  secrets: []
+
+files: []
+
+sources:
+  - { title: "Auth repo: app-model.md (üç soru, Yeni app bağlama)", url: "https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/canonical/app-model.md", kind: repo }
+  - { title: "Auth repo: infrastructure.md (Ortak paketler, Nano Cloud Run, veri taşıma)", url: "https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/canonical/infrastructure.md", kind: repo }
+  - { title: "Auth repo: app-integration-kit spec (K1-K8)", url: "https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/intent/app-integration-kit.md", kind: repo }
+  - { title: "consciouslab-auth (Python) README", url: "https://github.com/AnilTek/Consciouslab-Auth/blob/main/packages/python/consciouslab-auth/README.md", kind: repo }
+  - { title: "@consciouslab/auth (npm) README", url: "https://github.com/AnilTek/Consciouslab-Auth/blob/main/packages/ts/consciouslab-auth/README.md", kind: repo }
+  - { title: "Artifact Registry: Python authentication", url: "https://docs.cloud.google.com/artifact-registry/docs/python/authentication", kind: official_docs }
+  - { title: "Artifact Registry: Node.js authentication", url: "https://docs.cloud.google.com/artifact-registry/docs/nodejs/authentication", kind: official_docs }
+  - { title: "google-github-actions/auth (Workload Identity Federation)", url: "https://github.com/google-github-actions/auth", kind: repo }
+
+facts:
+  - key: request_template
+    label: Central request issue template
+    value: "Repo AnilTek/Consciouslab-Auth, .github/ISSUE_TEMPLATE/new-app.yml (issue form, label area:app-gecisi); whether gh issue create --template works with a form file is unverified"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/intent/app-integration-kit.md
+    checkedAt: "2026-10-27"
+  - key: python_install
+    label: Python package install
+    value: "consciouslab-auth==0.1.0rc1 from --index-url https://europe-west1-python.pkg.dev/consciouslab-bootstrap/consciouslab-python-all/simple/ (virtual repo; --extra-index-url forbidden); extras mcp, fastapi, db; Python >= 3.11"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/packages/python/consciouslab-auth/README.md
+    checkedAt: "2026-10-27"
+  - key: npm_install
+    label: npm package install
+    value: "@consciouslab/auth@0.1.0-rc.1 from https://europe-west1-npm.pkg.dev/consciouslab-bootstrap/consciouslab-npm/ via @consciouslab:registry scope; peers next-auth@5.0.0-beta.32, @auth/core@0.41.3, next@^16.3.2"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/packages/ts/consciouslab-auth/README.md
+    checkedAt: "2026-10-27"
+  - key: ci_reader
+    label: CI package reader identity
+    value: "Service account packages-reader via WIF (permissions id-token: write, google-github-actions/auth); repo variables GCP_WIF_PROVIDER and GCP_PACKAGES_READER_SA given by the center; any ref of pool repos can impersonate (read only)"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/canonical/infrastructure.md
+    checkedAt: "2026-10-27"
+  - key: docker_vendoring
+    label: Docker builds without credentials in the image
+    value: "Download the wheel/tarball in the workflow while credentials exist (pip download --no-deps -d vendor/, npm pack), Dockerfile installs from the local file, vendor/ is gitignored"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/packages/python/consciouslab-auth/README.md
+    checkedAt: "2026-10-27"
+  - key: conformance_command
+    label: Conformance gate
+    value: "python -m consciouslab_auth.conformance --mcp <url> [--api <url>] --expect-redacted default --issuer-port 0 --env PORT=<p> --start '<cmd>' ; exit 0 only when no FAIL"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/packages/python/consciouslab-auth/README.md
+    checkedAt: "2026-10-27"
+  - key: app_address_rule
+    label: App address and MCP address
+    value: "<name>.consciouslab.io is the auth app identity and never changes; MCP at https://mcp.<name>.consciouslab.io/mcp; DNS lives in the center (infra/bootstrap/app-dns.tf)"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/canonical/app-model.md
+    checkedAt: "2026-10-27"
+  - key: no_own_user_management
+    label: Apps have no own user management
+    value: "Person, invite, role and account work live only in the panel Admin screen; the app reads role from the token (ADR 0035)"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/canonical/app-model.md
+    checkedAt: "2026-10-27"
+  - key: sql_audit_rule
+    label: SQL audit before the shared database
+    value: "Mandatory: code inventory plus measurement on a masked prod copy at target size (--cpus/--memory), pg_stat_statements + EXPLAIN, 4 concurrent users; connections set statement_timeout, idle_in_transaction_session_timeout, application_name"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/canonical/app-model.md
+    checkedAt: "2026-10-27"
+  - key: migration_day_pattern
+    label: Data migration day (ADR 0042 pattern)
+    value: "Encrypted tunnel (no public DB access), pg_dump -Fc to a temp bucket (14 days), temporarily enlarge the shared instance, restore in GCP via Cloud Run Job with pg_restore -j 2, compare table counts, run migrations, shrink back"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/canonical/infrastructure.md
+    checkedAt: "2026-10-27"
+  - key: connector_owner
+    label: Team/Enterprise connectors
+    value: "On Claude Team/Enterprise plans an Owner adds the connector once for the team; on ChatGPT custom MCP availability depends on plan and admin settings (Plus unconfirmed); sign-in is always to Consciouslab auth"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/intent/nano-mcp-agents.md
+    checkedAt: "2026-10-27"
+  - key: client_redirects
+    label: Claude and ChatGPT redirect URIs
+    value: "Already on the auth side: claude.ai and claude.com /api/mcp/auth_callback, chatgpt.com/connector_platform_oauth_redirect, loopback; apps add nothing"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/intent/nano-mcp-agents.md
+    checkedAt: "2026-10-27"

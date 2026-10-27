@@ -8,6 +8,9 @@ bir projeye diff → onay → PR olarak uygular. Tekan kullanmayan biri de kit'i
 
 | Kit | Tür | Sürüm | Ne yapar |
 |---|---|---|---|
+| [consciouslab-app](kits/consciouslab-app/) | workflow | 0.1.0 | Yeni/taşınan app'i Consciouslab merkezi auth'una bağlama: adımlar, kim yapar, kapılar, uyum testi, panel kaydı |
+| [consciouslab-mcp](kits/consciouslab-mcp/) | setup | 0.1.0 | Python app'ine salt okur MCP sunucusu iskeleti: izinli araçlar, alan ayıklama, uyum testi (`consciouslab-auth` paketi) |
+| [consciouslab-hermes](kits/consciouslab-hermes/) | setup | 0.1.0 | Bir Hermes profiline `cl-hermes` kurulumu: profil başına ayar, anahtar, panel kaydı, DM-only `/baglan` |
 | [docs-os](kits/docs-os/) | setup | 1.1.0 | AGENTS.md router, docs/ slotları, doc-guard CI |
 | [local-env](kits/local-env/) | setup | 2.0.0 | `env-up`/`env-down`/`db-reset`/`dev`/`check`, `*_BASE_URL` mock'ları; Postgres şablonu, başka stack'e uyarlanır |
 | [railway](kits/railway/) | setup | 1.0.0 | Railway IaC (`.railway/railway.ts`), healthcheck, pre-deploy migration, ortam-dal eşlemesi |
