@@ -5,7 +5,7 @@
 id: consciouslab-mcp
 name: Consciouslab MCP
 kind: setup
-version: 0.1.0
+version: 0.2.0
 summary: "Python app'ine Consciouslab auth'una bağlı salt okur MCP sunucusu: izinli araçlar, alan ayıklama, uyum testi."
 
 requires:
@@ -35,6 +35,8 @@ sources:
   - { title: "Artifact Registry: virtual repositories", url: "https://docs.cloud.google.com/artifact-registry/docs/repositories/virtual-repo", kind: official_docs }
   - { title: "MCP specification: authorization", url: "https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization", kind: official_docs }
   - { title: "RFC 9728 OAuth Protected Resource Metadata", url: "https://www.rfc-editor.org/rfc/rfc9728", kind: official_docs }
+  - { title: "Cloud Run: authenticating service-to-service", url: "https://docs.cloud.google.com/run/docs/authenticating/service-to-service", kind: official_docs }
+  - { title: "Nano ADR-0036: MCP sitenin karşılığı (spend kalıbı)", url: "https://github.com/AnilTek/consciouslab-nano-influencer/blob/dev/docs/decisions/0036-mcp-sitenin-karsiligi.md", kind: repo }
 
 facts:
   - key: package_version
@@ -82,3 +84,13 @@ facts:
     value: "/.well-known/oauth-protected-resource (root and path-suffixed); 401 carries WWW-Authenticate Bearer resource_metadata=<url>"
     sourceUrl: https://www.rfc-editor.org/rfc/rfc9728
     checkedAt: "2026-10-27"
+  - key: service_to_service_identity
+    label: How the app API knows a call really comes from its MCP service (spend tools)
+    value: "No shared secret. API stays non-public; MCP service account gets roles/run.invoker on it; MCP sends a Google ID token (audience = API URL) in X-Serverless-Authorization; Cloud Run verifies it and passes it on with the signature removed, so the API reads the email claim and compares it to the expected MCP service account"
+    sourceUrl: https://docs.cloud.google.com/run/docs/authenticating/service-to-service
+    checkedAt: "2026-10-28"
+  - key: spend_tool_pattern
+    label: Money-spending MCP tool pattern
+    value: "MCP DB stays SELECT-only; the app API starts the work with the same core as the UI; the person's token is never forwarded (aud is the MCP); MCP sends the verified asker in the body and the API re-checks spend + role + active; ceiling = the figure the user approved in the preview"
+    sourceUrl: https://github.com/AnilTek/consciouslab-nano-influencer/blob/dev/docs/decisions/0036-mcp-sitenin-karsiligi.md
+    checkedAt: "2026-10-28"

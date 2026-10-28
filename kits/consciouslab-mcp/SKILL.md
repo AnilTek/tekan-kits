@@ -21,6 +21,8 @@ Nano ve Umay'da yaşananlar (tahmin değil):
 - Para (`cost_usd`) ve iletişim (`contact_email`) alanları araç çıktısında modelin sağlayıcısına gitti.
 - Araçlar `space` almadığı için marka A'nın kişisi B'yi görebilirdi (app-model "MCP kalıbı").
 - "Çalıştı" sözü kanıtsızdı: 401, `WWW-Authenticate`, RFC 9728 belgesi ve izin reddi denenmeden bitti denildi.
+- Nano'da para harcayan araç (iş başlatma) eklenirken MCP ↔ API arasına **ortak gizli anahtar** önerildi; gereksizdi.
+  Kanıtı Cloud Run servis kimliği zaten veriyor (pano → API'de kullanılıyordu); sır saklamak ve yenilemek boşuna yük (2026-10-28).
 
 ## Doğruluk kaynakları
 
@@ -56,7 +58,16 @@ Nano ve Umay'da yaşananlar (tahmin değil):
 10. **Servis ve adres merkezden.** Cloud Run servisi, alan eşlemesi, DB kullanıcısı ve auth'ta MCP alt kaynağı **merkez isteğiyle**
     (`consciouslab-app` adım 3) yapılır; bu repoya altyapı yazılmaz. İmaj `mcp_server/`'ı içermeli, komut `python -m mcp_server.app`
     (ilk imaj MCP kodsuz giderse servis açılmaz). Cloud Run'da `MCP_RESOURCE` ve `AUTH_ISSUER` env'i, adres `{{MCP_RESOURCE}}`.
-11. **Canlı doğrulama:** `curl <adres kökü>/.well-known/oauth-protected-resource` (`resource` adresle birebir),
+11. **Para harcayan araç (`spend`) gerekiyorsa** (Nano ADR-0036 kalıbı; kullanıcı ayrıca istemeli; `facts`: `spend_tool_pattern`):
+    - MCP'nin DB kullanıcısı **salt okur kalır**; işi app'in API'si başlatır, arayüzün kullandığı **aynı çekirdekle** (ikinci kapı yok).
+    - Kişinin token'ı API'ye **taşınmaz** (`aud` MCP'nin). MCP doğruladığı kişiyi (`sub`, `role`, `permissions`, `client_id`,
+      `act_sub`) gövdede bildirir; API yetkiyi **yeniden** denetler (`spend` + rol + aktif kişi).
+    - "İstek gerçekten MCP'den mi?" → **ortak sır YOK** (`facts`: `service_to_service_identity`): API herkese kapalı, MCP
+      kimliğine `run.invoker`; MCP kimlik kartını `X-Serverless-Authorization`'a koyar; API yükteki `email`'i beklenen MCP
+      kimliğiyle karşılaştırır (ikinci kilit). Cloud Run'da (`K_SERVICE` dolu) bu ayar yoksa uç kapalı.
+    - Tavan = kullanıcının önizlemede gördüğü rakam; araç onu parametre alır, o arada yükseldiyse iş açılmaz.
+    - Para alanları yalnız `spend` araçlarında açık. Sır yalnız **kimliği olmayan** taraf için (tarayıcıdan açılan süreli indirme linki, HMAC).
+12. **Canlı doğrulama:** `curl <adres kökü>/.well-known/oauth-protected-resource` (`resource` adresle birebir),
     `curl -i <adres>` 401 + `WWW-Authenticate`; sonra Anıl panelden bağlar.
 
 ## Araçlar
@@ -67,7 +78,8 @@ Salt okur DB'ye bağlanmak için yerel Postgres (`local-env` kit'i). Sır yazıl
 ## Sınırlar
 
 - Yalnız Python. Başka dilde MCP için paket yok: merkezden iste, kendin yazma.
-- Yalnız okuma. `write` ve `spend` araçları (tavan + insan onayı) ayrı spec ister.
+- Seed yalnız okuma araçları kurar. `spend` kalıbı Yöntem 11'de (çalışan örnek: Nano `apps/mcp/api_client.py`,
+  `apps/api/main.py` `/internal/mcp/search`). `write` araçları için kalıp henüz yaşanmadı.
 - Altyapı, DNS, panel kaydı, Claude/ChatGPT bağlayıcısı kapsam dışı (merkez ve Anıl).
 - Müşteri alanı olan app'te alan kuralları kapsam tavanı gerektirir; bu kit onu çözmez (spec'te "yapılmayacak").
 - Seed'in `visible_spaces()` ve örnek verisi yalnız iskelettir; gerçek alan kuralı app'e göre yazılır.
