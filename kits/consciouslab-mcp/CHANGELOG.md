@@ -1,5 +1,12 @@
 # consciouslab-mcp — değişiklik günlüğü
 
+## 0.2.0 — 2026-10-28
+
+Para harcayan araç (`spend`) kalıbı eklendi (SKILL.md Yöntem 11, iki yeni olgu). Nano'da yaşandı (ADR-0036):
+iş başlatmayı API yapar, MCP salt okur kalır; kişinin token'ı API'ye taşınmaz. MCP → API çağrısı için önce ortak gizli
+anahtar önerilmişti; gereksizdi, çünkü Cloud Run servis kimliği (`run.invoker` + imzası silinmiş kimlik kartındaki `email`)
+aynı kanıtı sırsız veriyor. Sır yalnız kimliği olmayan taraf (tarayıcıdan açılan indirme linki) için. Seed dosyası değişmedi.
+
 ## 0.1.0 — 2026-10-27
 
 İlk sürüm (ön sürüm: `consciouslab-auth` paketi de `0.1.0rc1`). `consciouslab-auth` paketinin `examples/sample_mcp`'sinden ve Nano'nun
