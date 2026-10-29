@@ -5,7 +5,7 @@
 id: consciouslab-mcp
 name: Consciouslab MCP
 kind: setup
-version: 0.2.0
+version: 0.3.0
 summary: "Python app'ine Consciouslab auth'una bağlı salt okur MCP sunucusu: izinli araçlar, alan ayıklama, uyum testi."
 
 requires:
@@ -41,9 +41,14 @@ sources:
 facts:
   - key: package_version
     label: consciouslab-auth published version (pin exactly)
-    value: "0.1.0rc1 (first release candidate; Python >= 3.11; extras mcp, fastapi, db)"
+    value: "0.2.0 (Python >= 3.11; extras mcp, fastapi, db); build_app requires an explicit listen choice"
     sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/packages/python/consciouslab-auth/README.md
-    checkedAt: "2026-10-27"
+    checkedAt: "2026-10-29"
+  - key: mcp_listen
+    label: MCP listen channel (subscriptions/listen, protocol 2026-07-28)
+    value: "Explicit per-app choice. Off by default in the seed: MCPServer(..., subscriptions=False) + build_app(..., listen=False). When on, the SDK answers listen with a stream that stays open even in JSON mode (pings every 15 s) until Cloud Run's request timeout, so the instance stays billed while a client is connected (Nano: ~3.7 h/day, ~12-15 USD/month). Carries only list-changed and resource-updated notifications, never tool results"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/decisions/0047-mcp-listen-is-a-per-app-choice.md
+    checkedAt: "2026-10-29"
   - key: python_index
     label: Python install address (single virtual repository)
     value: "--index-url https://europe-west1-python.pkg.dev/consciouslab-bootstrap/consciouslab-python-all/simple/ ; --extra-index-url is forbidden (dependency confusion)"

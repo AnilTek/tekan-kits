@@ -1,5 +1,13 @@
 # consciouslab-mcp — değişiklik günlüğü
 
+## 0.3.0 — 2026-10-29
+
+MCP dinleme hattı (`subscriptions/listen`) açık seçim oldu (auth ADR 0047; SKILL.md Yöntem 5, yeni olgu `mcp_listen`).
+Nano'da yaşandı: SDK'da varsayılan açık olan hat, Claude bağlıyken 300 sn'lik akışlarla sunucuyu ücretli tutuyordu
+(~12–15 $/ay). Seed `mcp_server/app.py` artık `subscriptions=False` + `listen=False`; `requirements-mcp.txt`
+`consciouslab-auth==0.2.0` (`build_app`'e zorunlu `listen`, geri uyumsuz). Bu kit'i önceden uygulamış app'ler iki satırı
+elle ekler.
+
 ## 0.2.0 — 2026-10-28
 
 Para harcayan araç (`spend`) kalıbı eklendi (SKILL.md Yöntem 11, iki yeni olgu). Nano'da yaşandı (ADR-0036):

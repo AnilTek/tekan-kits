@@ -94,5 +94,6 @@ Nano'nun taşınmasında ve Umay/Alp kurulumunda yaşananlar:
 - Altyapı (DNS, ortak veritabanı, Cloud Run modülü, GCP güveni) merkezdedir; bu kit onu app reposuna taşımaz, istek açtırır.
 - Python (API/MCP) ve Next.js dışı stack için paket yok; merkezden iste. `gh --template new-app.yml`'in form dosyasıyla çalıştığı doğrulanmadı.
 - Müşteri profilleri için agent kapsam tavanı ayrı iştir (YouTube Intel marka alanlarıyla).
-- Paket sürümleri ön sürümdür (`0.1.0rc1`, `0.1.0-rc.1`); ilk gerçek dış kullanıcı YouTube Intel olacak, kit ondan öğrenip güncellenir.
+- Python paketi `0.2.0` (MCP dinleme hattı açık seçim, `consciouslab-mcp` 0.3.0); npm paketi ön sürüm (`0.1.0-rc.1`). İlk gerçek dış
+  kullanıcı YouTube Intel olacak, kit ondan öğrenip güncellenir.
 - Yerel uçtan uca giriş, auth reposunun yerel çalışmasını ve merkezde seed'lenmiş istemciyi gerektirir; app reposu tek başına yapamaz.

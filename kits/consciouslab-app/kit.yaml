@@ -5,7 +5,7 @@
 id: consciouslab-app
 name: Consciouslab app
 kind: workflow
-version: 0.1.0
+version: 0.1.1
 summary: "Yeni ya da taşınan app'i Consciouslab merkezi auth'una bağlama: adımlar, kim yapar, kapılar, uyum testi, panel kaydı."
 
 requires:
@@ -32,9 +32,9 @@ facts:
     checkedAt: "2026-10-27"
   - key: python_install
     label: Python package install
-    value: "consciouslab-auth==0.1.0rc1 from --index-url https://europe-west1-python.pkg.dev/consciouslab-bootstrap/consciouslab-python-all/simple/ (virtual repo; --extra-index-url forbidden); extras mcp, fastapi, db; Python >= 3.11"
+    value: "consciouslab-auth==0.2.0 from --index-url https://europe-west1-python.pkg.dev/consciouslab-bootstrap/consciouslab-python-all/simple/ (virtual repo; --extra-index-url forbidden); extras mcp, fastapi, db; Python >= 3.11"
     sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/packages/python/consciouslab-auth/README.md
-    checkedAt: "2026-10-27"
+    checkedAt: "2026-10-29"
   - key: npm_install
     label: npm package install
     value: "@consciouslab/auth@0.1.0-rc.1 from https://europe-west1-npm.pkg.dev/consciouslab-bootstrap/consciouslab-npm/ via @consciouslab:registry scope; peers next-auth@5.0.0-beta.32, @auth/core@0.41.3, next@^16.3.2"

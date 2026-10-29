@@ -2,6 +2,6 @@
 # Yalnız bu sanal depo: --extra-index-url KULLANILMAZ (dependency confusion). Tam sürüme sabit.
 # Kimlik: pip install keyrings.google-artifactregistry-auth  +  gcloud auth application-default login
 # ([db] yalnız MCP veritabanı okuyorsa; test için uvicorn gerekir)
-consciouslab-auth[mcp,db]==0.1.0rc1
+consciouslab-auth[mcp,db]==0.2.0
 uvicorn>=0.30
 pytest>=8

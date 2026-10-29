@@ -38,9 +38,11 @@ def create_app():
     port = os.environ.get("PORT", DEFAULT_PORT)
     os.environ.setdefault("MCP_RESOURCE", f"http://127.0.0.1:{port}/mcp")
     verifier = TokenVerifier.from_env("MCP_RESOURCE", strict_audience=True)
-    mcp = MCPServer("{{APP_NAME}}-mcp", instructions="Read-only access to {{APP_NAME}} data.")
+    # Dinleme hattı (subscriptions/listen) kapalı: liste oturum içinde değişmiyor. Açmak maliyetli bir
+    # karardır (SKILL.md Yöntem 5, auth ADR 0047); ikisi birlikte değişir, uyuşmazsa build_app açılışta düşer.
+    mcp = MCPServer("{{APP_NAME}}-mcp", instructions="Read-only access to {{APP_NAME}} data.", subscriptions=False)
     register(mcp)
-    return build_app(mcp, verifier=verifier, lifespan=lifespan)
+    return build_app(mcp, verifier=verifier, listen=False, lifespan=lifespan)
 
 
 if __name__ == "__main__":
