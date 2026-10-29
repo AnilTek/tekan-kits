@@ -1,5 +1,10 @@
 # consciouslab-app — değişiklik günlüğü
 
+## 0.2.0 — 2026-10-29
+
+Tür `workflow` → `knowledge`. Tekan yalnız knowledge (bağla) ve setup (dosya yaz) kit'lerini sohbete ekliyor; workflow kit'i
+reddediliyordu (tekan ADR 0037, `add-to-chat.ts`). Artık app reposunda "+" ile projeye bağlanır ve her oturumda yüklenir. İçerik aynı.
+
 ## 0.1.1 — 2026-10-29
 
 Python paketi `consciouslab-auth` `0.1.0rc1` → `0.2.0` (olgu `python_install`): `build_app`'e zorunlu `listen` (auth ADR 0047,
