@@ -1,11 +1,12 @@
 # consciouslab-app — kit manifesti (ADR 0024 / tekan).
-# workflow: dosya kopyalamaz; adımlar, kim yapar ve kapılar SKILL.md'dedir. Şema başka kit'e bağlanmayı (uses/needs) tanımlamıyor:
+# knowledge: dosya kopyalamaz; adımlar, kim yapar ve kapılar SKILL.md'dedir. Tekan workflow kit'ini sohbete eklemiyor (tekan ADR 0037);
+# knowledge olarak projeye bağlanır ve o projenin her oturumunda yüklenir. Şema başka kit'e bağlanmayı (uses/needs) tanımlamıyor:
 # consciouslab-mcp ve consciouslab-hermes ile local-env SKILL.md'de kimliğiyle anılır.
 # Değişen değerler (sürümler, adresler, şablon adı) aşağıda `facts`'te.
 id: consciouslab-app
 name: Consciouslab app
-kind: workflow
-version: 0.1.1
+kind: knowledge
+version: 0.2.0
 summary: "Yeni ya da taşınan app'i Consciouslab merkezi auth'una bağlama: adımlar, kim yapar, kapılar, uyum testi, panel kaydı."
 
 requires:
