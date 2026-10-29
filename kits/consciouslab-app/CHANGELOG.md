@@ -1,5 +1,10 @@
 # consciouslab-app — değişiklik günlüğü
 
+## 0.1.1 — 2026-10-29
+
+Python paketi `consciouslab-auth` `0.1.0rc1` → `0.2.0` (olgu `python_install`): `build_app`'e zorunlu `listen` (auth ADR 0047,
+ayrıntı `consciouslab-mcp` 0.3.0). npm paketi değişmedi.
+
 ## 0.1.0 — 2026-10-27
 
 İlk sürüm (ön sürüm: paketler `0.1.0rc1` / `0.1.0-rc.1`). Nano'nun merkezi auth'a ve GCP'ye taşınmasında (ADR 0038, 0042), Umay/Alp

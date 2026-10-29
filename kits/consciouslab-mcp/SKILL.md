@@ -49,6 +49,11 @@ Nano ve Umay'da yaşananlar (tahmin değil):
    - Dönüş `dict[str, Any]`. Araç içinde izin kontrolü yazma; `tool(mcp, "read")` yapar.
    - **Ayıklama listesi app'e özeldir:** `REDACTED_KEYS`'e iletişim, para, çalışan kimliği alanlarını ekle; sorguda hiç seçme.
      Listeyi daraltmak kullanıcı onayı ister.
+   - **Dinleme hattı açık seçimdir** (`facts`: `mcp_listen`; auth ADR 0047). Seed kapalı gelir: `MCPServer(..., subscriptions=False)`
+     + `build_app(..., listen=False)`. Hat yalnız "araç / prompt / kaynak listesi değişti" ve "kaynak güncellendi" taşır; "iş bitti"
+     ya da araç sonucu taşımaz. Açıkken istemci bağlı kaldıkça Cloud Run sunucuyu ücretler (Nano'da ~12–15 $/ay, 300 sn'lik
+     akışlar). Yalnız liste **oturum açıkken** değişiyorsa aç (`listen=True`) ve maliyeti kullanıcıya söyle; çoklu kopyada haberin
+     her kopyaya gitmesi ayrı yayın altyapısı ister. Yeni sürümle değişen liste için gerekmez (istemci yeniden bağlanınca alır).
 6. **Veritabanı** `db.py`: yalnız `MCP_DSN` (ayrı, yalnız SELECT kullanıcı). Yazan DSN'e düşme. Geçici tablo gerekiyorsa
    `cursor(temp_tables=True)` yalnız sabit sorguda. Sorgular parametreli; liste uçlarında `limit`. SQL taraması `consciouslab-app`'te.
 7. **Testleri koş:** `make mcp-test`. Kendi araçların için ayıklama ve alan (`space`) testleri ekle: başka alan ⇒ hata.
