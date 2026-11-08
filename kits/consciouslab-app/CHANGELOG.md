@@ -1,5 +1,11 @@
 # consciouslab-app — değişiklik günlüğü
 
+## 0.3.0 — 2026-11-09
+
+Yeni adım 12 **Harcama özeti** (Consciouslab-Auth spec `panel-app-spend`, #220): app API'si panelin Maliyet sekmesine aylık
+dış servis harcamasını verir; kurallar "her sağlayıcıda app'e özel anahtar" ve "Google yapay zekâsı yalnız app'in projesinden".
+Eski 12–17 → 13–18. Python paketi `0.3.0` (olgu `python_install`), yeni olgu `spend_summary`.
+
 ## 0.2.0 — 2026-10-29
 
 Tür `workflow` → `knowledge`. Tekan yalnız knowledge (bağla) ve setup (dosya yaz) kit'lerini sohbete ekliyor; workflow kit'i

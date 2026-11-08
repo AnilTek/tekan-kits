@@ -66,19 +66,25 @@ Nano'nun taşınmasında ve Umay/Alp kurulumunda yaşananlar:
     kullanıcı. Her bağlantı `statement_timeout`, `idle_in_transaction_session_timeout`, `application_name` ile açılır. Önce/sonra rakamı
     ve çıktının değişmediği kanıtıyla rapor; sunucu büyütmek son çare. **Kapı:** rapor issue'ya bağlandı.
 11. **MCP** (verisi modellere açılacaksa): `consciouslab-mcp` kit'ini uygula; Cloud Run servisi ve adres `mcp.<app>.consciouslab.io` adım 3'ün parçasıdır.
-12. **Hermes** (isteğe bağlı): bir agent'ın app'e erişmesi için `consciouslab-hermes` kit'i; profil güven sınırıdır (müşteri profilinde iç kaynak yok).
-13. **Yerel tarayıcı turu** (gerçek tarayıcı, app agent'ı yapar, kullanıcı görür): panelden yeniden girişsiz geçiş; her rol (`viewer` yazamaz);
+12. **Harcama özeti** (app agent'ı; panelin Maliyet sekmesi, `facts`: `spend_summary`). API'ye `GET /internal/spend/summary?month=`
+    ucunu aç (`consciouslab_auth.spend`): GCP faturasına **girmeyen** her harcama sağlayıcı başına (Apify, OpenRouter, ElevenLabs…);
+    Vertex/Gemini ve YouTube Data API gibi faturaya girenler **dönmez** (çift sayım). Kesin tutar sağlayıcıdan: Apify iş oturunca
+    `usageTotalUsd` (kesinleşme tablosu, defter satırı değişmez), OpenRouter cevaptaki ücret; okunamayan "tahmini". Uç yalnız panelin
+    kimliğine açık (`service_caller_email`); merkez isteğinde "panel harcama okuyucusu" ve çağıran env adı. **Kurallar:** her
+    sağlayıcıda app'e özel anahtar; Google yapay zekâsı yalnız app'in kendi projesinden (Vertex), AI Studio anahtarı değil.
+13. **Hermes** (isteğe bağlı): bir agent'ın app'e erişmesi için `consciouslab-hermes` kit'i; profil güven sınırıdır (müşteri profilinde iç kaynak yok).
+14. **Yerel tarayıcı turu** (gerçek tarayıcı, app agent'ı yapar, kullanıcı görür): panelden yeniden girişsiz geçiş; her rol (`viewer` yazamaz);
     oturum yanıtında token yok ama kimlik var; çıkış app'e döner; oturumsuz kişi doğrudan auth'a gider; 11 dakikalık yenileme; kapatılan hesabın
     düşmesi. **Bir kez de anahtarlı web istemcisiyle** (yerel native istemci anahtar yolunu denemez). Sonucu ekran/çıktıyla raporla.
-14. **Uyum testi.** MCP varsa `make mcp-conformance` (`facts`: `conformance_command`); API için `--api <url>`. API-only app'te
+15. **Uyum testi.** MCP varsa `make mcp-conformance` (`facts`: `conformance_command`); API için `--api <url>`. API-only app'te
     `python -m consciouslab_auth.conformance --api <url> --start "<komut>" --issuer-port 0`. **Kapı: hepsi PASS (FAIL 0, SKIP açıklı).
     Yeşil değilse "bitti" deme.**
-15. **Panel kaydı** (Anıl): Yönetim → Uygulama ekle (adres, kimler girer, varsayılan rol) → Bağlantı → istemci ekle (web; dönüş
+16. **Panel kaydı** (Anıl): Yönetim → Uygulama ekle (adres, kimler girer, varsayılan rol) → Bağlantı → istemci ekle (web; dönüş
     `…/api/auth/callback/<sağlayıcı>`, çıkış sonrası dönüş adresi). Anahtar bir kez görünür, doğrudan app'in sır kabına girilir, sohbete yazılmaz.
     MCP varsa alt kaynak (`POST /cl/apps`, `parentResource`) ve roller. Claude/ChatGPT dönüş adresleri auth tarafında hazır.
-16. **Release.** Branch → PR (`dev`) → merge; `main` release'i kullanıcı onayıyla. Eski giriş değişkenleri giriş **doğrulanınca** silinir. İlk
+17. **Release.** Branch → PR (`dev`) → merge; `main` release'i kullanıcı onayıyla. Eski giriş değişkenleri giriş **doğrulanınca** silinir. İlk
     imaj `mcp_server/`'ı içermeli; deploy adımı servis henüz yoksa atlar (kırılmaz).
-17. **Taşınan app ekstrası.** Eski girişi (şifre, oturum, ortak sır) adım 16'dan sonra kaldır. **Veri taşıma günü** (ADR 0042 kalıbı):
+18. **Taşınan app ekstrası.** Eski girişi (şifre, oturum, ortak sır) adım 17'den sonra kaldır. **Veri taşıma günü** (ADR 0042 kalıbı):
     Railway Postgres'e genel erişim açma, `railway connect … --tunnel-only` ile şifreli tünel (parolayı dosyaya yönlendir, ekrana basma,
     sonra sil); kaynakta tablo başına sayım; `pg_dump -Fc --no-owner --no-privileges` (aynı major) → geçici bucket (14 gün); ortak sunucu
     **geçici büyütülür**; GCP içinde Cloud Run Job'la `pg_restore --clean --if-exists -j 2` (yerelden proxy ile yükleme yok); sayımlar
@@ -94,6 +100,6 @@ Nano'nun taşınmasında ve Umay/Alp kurulumunda yaşananlar:
 - Altyapı (DNS, ortak veritabanı, Cloud Run modülü, GCP güveni) merkezdedir; bu kit onu app reposuna taşımaz, istek açtırır.
 - Python (API/MCP) ve Next.js dışı stack için paket yok; merkezden iste. `gh --template new-app.yml`'in form dosyasıyla çalıştığı doğrulanmadı.
 - Müşteri profilleri için agent kapsam tavanı ayrı iştir (YouTube Intel marka alanlarıyla).
-- Python paketi `0.2.0` (MCP dinleme hattı açık seçim, `consciouslab-mcp` 0.3.0); npm paketi ön sürüm (`0.1.0-rc.1`). İlk gerçek dış
-  kullanıcı YouTube Intel olacak, kit ondan öğrenip güncellenir.
+- Python paketi `0.3.0` (harcama özeti modülü; MCP dinleme hattı açık seçim, `consciouslab-mcp` 0.3.0); npm paketi ön sürüm
+  (`0.1.0-rc.1`).
 - Yerel uçtan uca giriş, auth reposunun yerel çalışmasını ve merkezde seed'lenmiş istemciyi gerektirir; app reposu tek başına yapamaz.
