@@ -6,7 +6,7 @@
 id: consciouslab-app
 name: Consciouslab app
 kind: knowledge
-version: 0.2.0
+version: 0.3.0
 summary: "Yeni ya da taşınan app'i Consciouslab merkezi auth'una bağlama: adımlar, kim yapar, kapılar, uyum testi, panel kaydı."
 
 requires:
@@ -33,9 +33,9 @@ facts:
     checkedAt: "2026-10-27"
   - key: python_install
     label: Python package install
-    value: "consciouslab-auth==0.2.0 from --index-url https://europe-west1-python.pkg.dev/consciouslab-bootstrap/consciouslab-python-all/simple/ (virtual repo; --extra-index-url forbidden); extras mcp, fastapi, db; Python >= 3.11"
+    value: "consciouslab-auth==0.3.0 from --index-url https://europe-west1-python.pkg.dev/consciouslab-bootstrap/consciouslab-python-all/simple/ (virtual repo; --extra-index-url forbidden); extras mcp, fastapi, db; Python >= 3.11"
     sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/packages/python/consciouslab-auth/README.md
-    checkedAt: "2026-10-29"
+    checkedAt: "2026-11-09"
   - key: npm_install
     label: npm package install
     value: "@consciouslab/auth@0.1.0-rc.1 from https://europe-west1-npm.pkg.dev/consciouslab-bootstrap/consciouslab-npm/ via @consciouslab:registry scope; peers next-auth@5.0.0-beta.32, @auth/core@0.41.3, next@^16.3.2"
@@ -86,3 +86,8 @@ facts:
     value: "Already on the auth side: claude.ai and claude.com /api/mcp/auth_callback, chatgpt.com/connector_platform_oauth_redirect, loopback; apps add nothing"
     sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/docs/intent/nano-mcp-agents.md
     checkedAt: "2026-10-27"
+  - key: spend_summary
+    label: Monthly spend summary endpoint for the panel's Costs tab
+    value: "GET /internal/spend/summary?month=YYYY-MM on the app API, guarded to the auth panel's Cloud Run identity (panel-run@consciouslab-auth-prod). Returns per-provider spend NOT billed through the company GCP billing account (Apify, OpenRouter, ElevenLabs…), exact from the provider where possible (Apify usageTotalUsd after settling, OpenRouter usage.cost); Vertex/Gemini and YouTube Data API excluded. Helpers: consciouslab_auth.spend (consciouslab-auth 0.3.0)"
+    sourceUrl: https://github.com/AnilTek/Consciouslab-Auth/blob/main/packages/python/consciouslab-auth/README.md
+    checkedAt: "2026-11-09"
